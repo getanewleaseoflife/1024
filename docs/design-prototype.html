@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>岗位胜任力评估智能体 · AI 面试官 — 高保真原型</title>
+<!-- 依赖：Tailwind(CDN)、ECharts(CDN)、Google Fonts(西文) 需联网；离线时中文回退系统字体，仅雷达图降级 -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet" />
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        primary: { DEFAULT: '#0369A1', hover: '#075985', soft: '#E0F2FE' },
+        secondary: '#0EA5E9',
+        accent: '#16A34A',
+        background: '#F0F9FF',
+        surface: '#FFFFFF',
+        foreground: '#0C4A6E',
+        muted: '#E7EFF5',
+        'muted-foreground': '#475569',
+        border: '#BAE6FD',
+        destructive: '#DC2626',
+        success: { DEFAULT: '#16A34A', bg: '#DCFCE7' },
+        warning: { DEFAULT: '#D97706', bg: '#FEF3C7' },
+        danger: { DEFAULT: '#DC2626', bg: '#FEE2E2' },
+        neutral: { DEFAULT: '#64748B', bg: '#F1F5F9' },
+        persona: { friendly: '#0D9488', rigorous: '#0369A1', stress: '#BE123C' },
+      },
+      fontFamily: {
+        sans: ['Open Sans', 'system-ui', '-apple-system', 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', 'sans-serif'],
+        display: ['Poppins', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', 'sans-serif'],
+      },
+      boxShadow: {
+        card: '0 1px 2px rgba(12,74,110,0.06)',
+        panel: '0 4px 16px rgba(12,74,110,0.10)',
+      },
+      borderRadius: { card: '12px' },
+    },
+  },
+};
+</script>
+<style>
+  :root { color-scheme: light; }
+  body { font-feature-settings: "tnum" 1; }
+  .icon { width: 1.25rem; height: 1.25rem; }
+  /* SSE 打字机光标 */
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  .cursor-blink { display:inline-block; width:2px; height:1.1em; background:#0369A1; vertical-align:-2px; margin-left:2px; animation: blink 1s step-end infinite; }
+  /* 等待三点 */
+  @keyframes dotpulse { 0%,80%,100%{opacity:.25} 40%{opacity:1} }
+  .thinking-dot { animation: dotpulse 1.2s infinite; }
+  .thinking-dot:nth-child(2){ animation-delay:.2s }
+  .thinking-dot:nth-child(3){ animation-delay:.4s }
+  /* 证据条目入场 */
+  @keyframes rise { from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:none} }
+  .rise { animation: rise .35s ease both; }
+  @media (prefers-reduced-motion: reduce) {
+    .cursor-blink, .thinking-dot, .rise { animation: none !important; }
+  }
+</style>
+</head>
+<body class="bg-background text-foreground font-sans antialiased min-h-screen">
+
+<!-- ============ 顶部品牌栏 ============ -->
+<header class="sticky top-0 z-40 bg-surface/90 backdrop-blur border-b border-border">
+  <div class="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-lg bg-primary text-white grid place-items-center">
+        <svg class="icon w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9.3 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.55 12l2.846-.813a4.5 4.5 0 003.09-3.09L9.3 5.25l.513 2.846a4.5 4.5 0 003.09 3.09l2.846.813-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" />
+        </svg>
+      </div>
+      <div>
+        <div class="font-display font-semibold text-[15px] leading-tight">岗位胜任力评估智能体</div>
+        <div class="text-[11px] text-muted-foreground leading-tight">AI 面试官 · 模拟面试 + 胜任力评估报告</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="text-[11px] text-muted-foreground hidden sm:block">高保真原型 · 5 页可点击流转</span>
+      <span class="inline-flex items-center gap-1.5 text-[11px] font-medium text-success px-2.5 py-1 rounded-full bg-success-bg">
+        <span class="w-1.5 h-1.5 rounded-full bg-success"></span> 就绪
+      </span>
+    </div>
+  </div>
+</header>
+
+<!-- ============ 步骤条 ============ -->
+<nav class="bg-surface/70 backdrop-blur border-b border-border sticky top-16 z-30">
+  <div class="max-w-6xl mx-auto px-5 py-3">
+    <ol class="flex items-center">
+      <li data-step="1" class="step flex items-center cursor-pointer group">
+        <span class="step-dot w-7 h-7 rounded-full grid place-items-center text-[12px] font-semibold border transition">1</span>
+        <span class="step-label ml-2 text-[13px] text-muted-foreground group-hover:text-foreground transition">岗位选择</span>
+      </li>
+      <li class="flex-1 mx-3 h-px bg-border"><span class="step-line block h-full bg-primary transition-all" style="width:0%"></span></li>
+      <li data-step="2" class="step flex items-center cursor-pointer group">
+        <span class="step-dot w-7 h-7 rounded-full grid place-items-center text-[12px] font-semibold border transition">2</span>
+        <span class="step-label ml-2 text-[13px] text-muted-foreground group-hover:text-foreground transition">简历输入</span>
+      </li>
+      <li class="flex-1 mx-3 h-px bg-border"><span class="step-line block h-full bg-primary transition-all" style="width:0%"></span></li>
+      <li data-step="3" class="step flex items-center cursor-pointer group">
+        <span class="step-dot w-7 h-7 rounded-full grid place-items-center text-[12px] font-semibold border transition">3</span>
+        <span class="step-label ml-2 text-[13px] text-muted-foreground group-hover:text-foreground transition">能力画像</span>
+      </li>
+      <li class="flex-1 mx-3 h-px bg-border"><span class="step-line block h-full bg-primary transition-all" style="width:0%"></span></li>
+      <li data-step="4" class="step flex items-center cursor-pointer group">
+        <span class="step-dot w-7 h-7 rounded-full grid place-items-center text-[12px] font-semibold border transition">4</span>
+        <span class="step-label ml-2 text-[13px] text-muted-foreground group-hover:text-foreground transition">模拟面试</span>
+      </li>
+      <li class="flex-1 mx-3 h-px bg-border"><span class="step-line block h-full bg-primary transition-all" style="width:0%"></span></li>
+      <li data-step="5" class="step flex items-center cursor-pointer group">
+        <span class="step-dot w-7 h-7 rounded-full grid place-items-center text-[12px] font-semibold border transition">5</span>
+        <span class="step-label ml-2 text-[13px] text-muted-foreground group-hover:text-foreground transition">评估报告</span>
+      </li>
+    </ol>
+  </div>
+</nav>
+
+<main class="max-w-6xl mx-auto px-5 py-8">
+
+<!-- ============ 页面 1：岗位选择 ============ -->
+<section data-page="1">
+  <div class="mb-7">
+    <h1 class="font-display text-2xl font-semibold">选择目标岗位</h1>
+    <p class="text-muted-foreground text-sm mt-1">面试将基于该岗位的胜任力模型出题与追问，新增岗位为「换数据」而非「改代码」。</p>
+  </div>
+
+  <div class="grid md:grid-cols-3 gap-5">
+    <!-- AI 算法（当前） -->
+    <div data-position="ai" class="pos-card cursor-pointer rounded-card border-2 border-primary bg-surface p-5 shadow-card relative transition hover:-translate-y-0.5">
+      <span class="absolute top-4 right-4 inline-flex items-center gap-1 text-[11px] font-medium text-white bg-primary px-2 py-0.5 rounded-full">推荐</span>
+      <div class="w-11 h-11 rounded-lg bg-primary-soft text-primary grid place-items-center mb-4">
+        <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 002.25-2.25V6.75a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 6.75v10.5a2.25 2.25 0 002.25 2.25zm.75-12h9v9h-9v-9z"/></svg>
+      </div>
+      <h3 class="font-display font-semibold text-lg">AI 算法工程师</h3>
+      <p class="text-muted-foreground text-[13px] mt-1 leading-relaxed">机器学习 / 深度学习 / 模型训练与部署，考察算法深度与工程落地。</p>
+      <div class="flex flex-wrap gap-1.5 mt-4">
+        <span class="text-[11px] text-primary bg-primary-soft px-2 py-0.5 rounded-full">机器学习基础</span>
+        <span class="text-[11px] text-primary bg-primary-soft px-2 py-0.5 rounded-full">模型算法深度</span>
+        <span class="text-[11px] text-primary bg-primary-soft px-2 py-0.5 rounded-full">项目实战</span>
+        <span class="text-[11px] text-primary bg-primary-soft px-2 py-0.5 rounded-full">+3 维</span>
+      </div>
+      <div class="mt-5 pt-4 border-t border-border flex items-center justify-between">
+        <span class="text-[12px] text-success font-medium inline-flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-success"></span>MVP 当前可用</span>
+        <svg class="icon w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+      </div>
+    </div>
+
+    <!-- Java -->
+    <div data-position="java" class="pos-card cursor-pointer rounded-card border-2 border-border bg-surface p-5 shadow-card relative transition hover:-translate-y-0.5 opacity-90">
+      <span class="absolute top-4 right-4 inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">即将上线</span>
+      <div class="w-11 h-11 rounded-lg bg-muted text-muted-foreground grid place-items-center mb-4">
+        <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"/></svg>
+      </div>
+      <h3 class="font-display font-semibold text-lg">Java 开发工程师</h3>
+      <p class="text-muted-foreground text-[13px] mt-1 leading-relaxed">后端开发 / 分布式 / 数据库，考察工程能力与系统设计。</p>
+      <div class="flex flex-wrap gap-1.5 mt-4">
+        <span class="text-[11px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">Java 基础</span>
+        <span class="text-[11px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">Spring</span>
+        <span class="text-[11px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">分布式</span>
+      </div>
+      <div class="mt-5 pt-4 border-t border-border flex items-center justify-between">
+        <span class="text-[12px] text-muted-foreground">换数据即启用（M5）</span>
+        <svg class="icon w-4 h-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+      </div>
+    </div>
+
+    <!-- 产品经理 -->
+    <div data-position="pm" class="pos-card cursor-pointer rounded-card border-2 border-border bg-surface p-5 shadow-card relative transition hover:-translate-y-0.5 opacity-90">
+      <span class="absolute top-4 right-4 inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">即将上线</span>
+      <div class="w-11 h-11 rounded-lg bg-muted text-muted-foreground grid place-items-center mb-4">
+        <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18"/></svg>
+      </div>
+      <h3 class="font-display font-semibold text-lg">产品经理</h3>
+      <p class="text-muted-foreground text-[13px] mt-1 leading-relaxed">需求分析 / 产品设计 / 数据驱动，考察产品思维与沟通表达。</p>
+      <div class="flex flex-wrap gap-1.5 mt-4">
+        <span class="text-[11px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">需求分析</span>
+        <span class="text-[11px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">产品设计</span>
+        <span class="text-[11px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">数据分析</span>
+      </div>
+      <div class="mt-5 pt-4 border-t border-border flex items-center justify-between">
+        <span class="text-[12px] text-muted-foreground">换数据即启用（M5）</span>
+        <svg class="icon w-4 h-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-8 flex justify-end">
+    <button onclick="showPage(2)" class="inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white text-sm font-medium px-6 py-3 rounded-lg transition cursor-pointer">
+      下一步：投递简历
+      <svg class="icon w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
+    </button>
+  </div>
+</section>
+
+<!-- ============ 页面 2：简历输入 ============ -->
+<section data-page="2" class="hidden">
+  <div class="mb-7">
+    <h1 class="font-display text-2xl font-semibold">投递简历</h1>
+    <p class="text-muted-foreground text-sm mt-1">粘贴简历文本即可解析，构建能力画像并与目标岗位做 Gap 分析。</p>
+  </div>
+
+  <div class="grid lg:grid-cols-3 gap-5">
+    <!-- 文本域 -->
+    <div class="lg:col-span-2 rounded-card bg-surface border border-border shadow-card p-5">
+      <label for="resume" class="text-sm font-medium">简历文本 <span class="text-destructive">*</span></label>
+      <textarea id="resume" rows="14" placeholder="粘贴简历全文，例如：&#10;张三 | 某大学 计算机科学 本科 2026 届&#10;技能：Python、PyTorch、SQL…&#10;项目：基于 CNN 的图像分类系统…&#10;实习：某公司算法实习生…" class="mt-2 w-full rounded-lg border border-border bg-background/50 p-4 text-[14px] leading-relaxed focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary resize-none placeholder:text-muted-foreground/60"></textarea>
+      <div class="mt-2 flex items-center justify-between text-[12px] text-muted-foreground">
+        <span id="resume-count">0 字</span>
+        <span class="inline-flex items-center gap-1"><svg class="icon w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/></svg>粘贴后可再次编辑</span>
+      </div>
+    </div>
+
+    <!-- 右侧：上传 + 隐私 -->
+    <div class="space-y-5">
+      <div class="rounded-card bg-surface border border-border shadow-card p-5">
+        <div class="text-sm font-medium mb-2">上传 PDF（增强项）</div>
+        <div class="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-secondary transition">
+          <svg class="icon w-7 h-7 mx-auto text-muted-foreground mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
+          <p class="text-[13px] text-muted-foreground">点击或拖拽 PDF 到此处</p>
+          <p class="text-[11px] text-muted-foreground/70 mt-1">P0 增强项 · 当前可先用文本粘贴</p>
+        </div>
+      </div>
+
+      <div class="rounded-card bg-background border border-border p-5">
+        <div class="flex items-start gap-2.5">
+          <svg class="icon w-5 h-5 text-primary shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+          <div>
+            <div class="text-[13px] font-medium">隐私保护</div>
+            <p class="text-[12px] text-muted-foreground leading-relaxed mt-1">简历为敏感信息，仅本次会话进程内存使用；结构化产物落临时库，会话/演示结束即删，本地、不外发、即清。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-8 flex items-center justify-between">
+    <button onclick="showPage(1)" class="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition cursor-pointer">
+      <svg class="icon w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
+      上一步
+    </button>
+    <button onclick="showPage(3)" class="inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white text-sm font-medium px-6 py-3 rounded-lg transition cursor-pointer">
+      解析简历
+      <svg class="icon w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
+    </button>
+  </div>
+</section>
+
+<!-- ============ 页面 3：能力画像 ============ -->
+<section data-page="3" class="hidden">
+  <div class="mb-7 flex items-end justify-between">
+    <div>
+      <h1 class="font-display text-2xl font-semibold">能力画像</h1>
+      <p class="text-muted-foreground text-sm mt-1">从简历解析出的结构化画像与岗位 Gap 分析，Gap 决定面试出题顺序。</p>
+    </div>
+    <button onclick="showPage(4)" class="hidden sm:inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white text-sm font-medium px-6 py-3 rounded-lg transition cursor-pointer">开始面试</button>
+  </div>
+
+  <!-- 候选人概要 -->
+  <div class="rounded-card bg-surface border border-border shadow-card p-5 mb-5 flex flex-wrap items-center gap-5">
+    <div class="w-14 h-14 rounded-full bg-primary text-white grid place-items-center font-display font-semibold text-xl">张</div>
+    <div class="flex-1 min-w-[200px]">
+      <div class="flex items-center gap-2">
+        <span class="font-semibold text-lg">张三</span>
+        <span class="text-[12px] text-muted-foreground">某大学 · 计算机科学 · 本科 2026 届</span>
+      </div>
+      <div class="flex flex-wrap gap-1.5 mt-2">
+        <span class="text-[11px] text-foreground bg-muted px-2 py-0.5 rounded-full">目标岗位：AI 算法工程师</span>
+        <span class="text-[11px] text-foreground bg-muted px-2 py-0.5 rounded-full">实习：某公司算法实习生</span>
+        <span class="text-[11px] text-foreground bg-muted px-2 py-0.5 rounded-full">项目：图像分类 · 点击率预估</span>
+      </div>
+    </div>
+    <div class="text-right">
+      <div class="text-[12px] text-muted-foreground">出题顺序</div>
+      <div class="text-[13px] font-medium mt-0.5">待考察 → 缺失 → 已具备</div>
+    </div>
+  </div>
+
+  <!-- Gap 三类 -->
+  <div class="grid md:grid-cols-3 gap-5 mb-8">
+    <div class="rounded-card bg-surface border border-border shadow-card p-5">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="w-2.5 h-2.5 rounded-full bg-success"></span>
+        <span class="text-sm font-semibold">已具备</span>
+        <span class="text-[11px] text-muted-foreground">4</span>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <span class="text-[12px] text-success bg-success-bg px-2.5 py-1 rounded-full">Python</span>
+        <span class="text-[12px] text-success bg-success-bg px-2.5 py-1 rounded-full">PyTorch</span>
+        <span class="text-[12px] text-success bg-success-bg px-2.5 py-1 rounded-full">机器学习基础</span>
+        <span class="text-[12px] text-success bg-success-bg px-2.5 py-1 rounded-full">数据处理</span>
+      </div>
+    </div>
+    <div class="rounded-card bg-surface border border-border shadow-card p-5">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="w-2.5 h-2.5 rounded-full bg-warning"></span>
+        <span class="text-sm font-semibold">待考察</span>
+        <span class="text-[11px] text-muted-foreground">3</span>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <span class="text-[12px] text-warning bg-warning-bg px-2.5 py-1 rounded-full">Transformer 原理</span>
+        <span class="text-[12px] text-warning bg-warning-bg px-2.5 py-1 rounded-full">模型调优</span>
+        <span class="text-[12px] text-warning bg-warning-bg px-2.5 py-1 rounded-full">分布式训练</span>
+      </div>
+    </div>
+    <div class="rounded-card bg-surface border border-border shadow-card p-5">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="w-2.5 h-2.5 rounded-full bg-danger"></span>
+        <span class="text-sm font-semibold">缺失</span>
+        <span class="text-[11px] text-muted-foreground">3</span>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <span class="text-[12px] text-danger bg-danger-bg px-2.5 py-1 rounded-full">大模型部署</span>
+        <span class="text-[12px] text-danger bg-danger-bg px-2.5 py-1 rounded-full">A/B 测试</span>
+        <span class="text-[12px] text-danger bg-danger-bg px-2.5 py-1 rounded-full">强化学习</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 人格选择器 -->
+  <div class="mb-3">
+    <h2 class="font-display text-lg font-semibold">选择面试官人格</h2>
+    <p class="text-muted-foreground text-sm mt-0.5">人格影响追问语气、密度与压迫感（拟人度演示点）。</p>
+  </div>
+  <div class="grid md:grid-cols-3 gap-5 mb-8">
+    <div data-persona="friendly" class="persona-card cursor-pointer rounded-card border-2 border-border bg-surface p-5 shadow-card transition hover:-translate-y-0.5">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-9 h-9 rounded-full bg-persona-friendly/10 text-persona-friendly grid place-items-center text-sm font-semibold">随</div>
+        <div>
+          <div class="text-sm font-semibold">随和型</div>
+          <div class="text-[12px] text-muted-foreground">同级工程师</div>
+        </div>
+      </div>
+      <p class="text-[13px] text-muted-foreground leading-relaxed">轻松引导、鼓励式追问，适合紧张或初次面试的候选人。</p>
+    </div>
+    <div data-persona="rigorous" class="persona-card persona-active cursor-pointer rounded-card border-2 bg-surface p-5 shadow-card transition hover:-translate-y-0.5" style="border-color:#0369A1">
+      <span class="absolute top-4 right-4 text-[11px] text-primary font-medium">默认</span>
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-9 h-9 rounded-full bg-persona-rigorous/10 text-persona-rigorous grid place-items-center text-sm font-semibold">严</div>
+        <div>
+          <div class="text-sm font-semibold">严谨型</div>
+          <div class="text-[12px] text-muted-foreground">资深专家</div>
+        </div>
+      </div>
+      <p class="text-[13px] text-muted-foreground leading-relaxed">追问犀利、直指漏洞，考察能力边界，最能体现面试逻辑深度。</p>
+    </div>
+    <div data-persona="stress" class="persona-card cursor-pointer rounded-card border-2 border-border bg-surface p-5 shadow-card transition hover:-translate-y-0.5">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-9 h-9 rounded-full bg-persona-stress/10 text-persona-stress grid place-items-center text-sm font-semibold">压</div>
+        <div>
+          <div class="text-sm font-semibold">压力型</div>
+          <div class="text-[12px] text-muted-foreground">HR 主管 / 经理</div>
+        </div>
+      </div>
+      <p class="text-[13px] text-muted-foreground leading-relaxed">压迫式追问、质疑简历，模拟高压面试，考验临场应变。</p>
+    </div>
+  </div>
+
+  <div class="flex items-center justify-between">
+    <button onclick="showPage(2)" class="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition cursor-pointer">
+      <svg class="icon w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
+      上一步
+    </button>
+    <button onclick="showPage(4)" class="inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white text-sm font-medium px-6 py-3 rounded-lg transition cursor-pointer">
+      开始面试
+      <svg class="icon w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
+    </button>
+  </div>
+</section>
+
+<!-- ============ 页面 4：面试对话 ============ -->
+<section data-page="4" class="hidden">
+  <!-- 面试头部 -->
+  <div class="rounded-card bg-surface border border-border shadow-card p-4 mb-5 flex flex-wrap items-center gap-4">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-full bg-persona-rigorous/10 text-persona-rigorous grid place-items-center font-semibold border-2 border-persona-rigorous">严</div>
+      <div>
+        <div class="text-sm font-semibold inline-flex items-center gap-2">严谨型面试官 <span class="text-[11px] font-normal text-muted-foreground">资深专家 · 默认</span></div>
+        <div class="text-[12px] text-muted-foreground">当前维度：<span class="text-foreground font-medium">模型算法深度</span> · 第 2 题</div>
+      </div>
+    </div>
+    <div class="flex-1 min-w-[160px]">
+      <div class="flex justify-between text-[11px] text-muted-foreground mb-1"><span>维度覆盖 5/6</span><span>追问 1/3</span></div>
+      <div class="h-1.5 rounded-full bg-muted overflow-hidden"><div class="h-full bg-primary rounded-full" style="width:72%"></div></div>
+    </div>
+    <button class="inline-flex items-center gap-1.5 text-[12px] font-medium text-danger hover:bg-danger-bg px-3 py-1.5 rounded-lg transition cursor-pointer">
+      <svg class="icon w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 7.5A2.25 2.25 0 017.5 5.25h9a2.25 2.25 0 012.25 2.25v9a2.25 2.25 0 01-2.25 2.25h-9a2.25 2.25 0 01-2.25-2.25v-9z"/></svg>
+      结束面试
+    </button>
+  </div>
+
+  <div class="grid lg:grid-cols-3 gap-5">
+    <!-- 对话流 -->
+    <div class="lg:col-span-2 rounded-card bg-surface border border-border shadow-card flex flex-col" style="min-height:560px">
+      <div class="flex-1 p-5 space-y-5 overflow-y-auto" id="chat-scroll">
+        <!-- AI 开场 -->
+        <div class="flex gap-3">
+          <div class="w-8 h-8 rounded-full bg-primary-soft text-primary grid place-items-center text-[12px] font-semibold shrink-0">严</div>
+          <div class="max-w-[78%]">
+            <div class="bg-surface border border-border rounded-card rounded-tl-none px-4 py-3 text-[14px] leading-relaxed shadow-card">
+              你好，我是今天的面试官。简历里提到你做过一个图像分类项目，我们先从最基础的聊起——<b>能不能先用一句话，说说什么是「过拟合」？</b>
+            </div>
+          </div>
+        </div>
+
+        <!-- 候选人回答 -->
+        <div class="flex gap-3 flex-row-reverse">
+          <div class="w-8 h-8 rounded-full bg-primary text-white grid place-items-center text-[12px] font-semibold shrink-0">张</div>
+          <div class="max-w-[78%]">
+            <div class="bg-primary-soft text-foreground rounded-card rounded-tr-none px-4 py-3 text-[14px] leading-relaxed">
+              过拟合就是模型在训练集上表现很好，但到了测试集上效果明显变差，说明它把训练数据里的噪声也学进去了。
+            </div>
+          </div>
+        </div>
+
+        <!-- AI 追问（引用高亮 + 肢体语言） -->
+        <div class="flex gap-3">
+          <div class="w-8 h-8 rounded-full bg-primary-soft text-primary grid place-items-center text-[12px] font-semibold shrink-0">严</div>
+          <div class="max-w-[78%]">
+            <div class="text-[12px] text-muted-foreground italic mb-1.5 ml-1">(合上简历，身体前倾)</div>
+            <div class="bg-surface border border-border rounded-card rounded-tl-none px-4 py-3 text-[14px] leading-relaxed shadow-card">
+              你说<span class="quote-chip inline-block bg-primary-soft border-l-2 border-primary px-1.5 rounded-sm italic text-primary">「把训练数据里的噪声也学进去了」</span>——那请你具体讲讲，你在那个项目里是怎么发现它过拟合的？用了什么手段去缓解？
+            </div>
+          </div>
+        </div>
+
+        <!-- 候选人回答 -->
+        <div class="flex gap-3 flex-row-reverse">
+          <div class="w-8 h-8 rounded-full bg-primary text-white grid place-items-center text-[12px] font-semibold shrink-0">张</div>
+          <div class="max-w-[78%]">
+            <div class="bg-primary-soft text-foreground rounded-card rounded-tr-none px-4 py-3 text-[14px] leading-relaxed">
+              主要通过看训练集和验证集的 loss 曲线，发现训练 loss 一直在降但验证 loss 开始往上翘。缓解的话，我先加了 Dropout 和 L2 正则，后来也用数据增强扩充了训练集。
+            </div>
+          </div>
+        </div>
+
+        <!-- AI 追问（打字机 + 降级徽标） -->
+        <div class="flex gap-3">
+          <div class="w-8 h-8 rounded-full bg-primary-soft text-primary grid place-items-center text-[12px] font-semibold shrink-0">严</div>
+          <div class="max-w-[78%]">
+            <div class="bg-surface border border-border rounded-card rounded-tl-none px-4 py-3 text-[14px] leading-relaxed shadow-card">
+              <span class="inline-flex items-center gap-1 text-[11px] font-medium text-warning bg-warning-bg px-2 py-0.5 rounded-full mr-1.5 align-middle">降级提问</span>
+              L2 正则为什么能抑制过拟合？它的作用对象是权重还是偏置？<span class="cursor-blink"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 等待态 -->
+        <div class="flex gap-3">
+          <div class="w-8 h-8 rounded-full bg-primary-soft text-primary grid place-items-center text-[12px] font-semibold shrink-0">严</div>
+          <div class="bg-surface border border-border rounded-card rounded-tl-none px-4 py-3 shadow-card">
+            <span class="text-[14px] text-muted-foreground inline-flex items-center gap-1">
+              正在思考<span class="thinking-dot">.</span><span class="thinking-dot">.</span><span class="thinking-dot">.</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 输入区 -->
+      <div class="border-t border-border p-4">
+        <div class="flex items-end gap-3">
+          <button class="w-11 h-11 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-secondary grid place-items-center transition cursor-pointer shrink-0" title="语音输入（增强项）">
+            <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z"/></svg>
+          </button>
+          <textarea rows="2" placeholder="输入你的回答…（或点击麦克风语音输入）" class="flex-1 rounded-lg border border-border bg-background/50 p-3 text-[14px] leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary placeholder:text-muted-foreground/60"></textarea>
+          <button class="w-11 h-11 rounded-lg bg-primary hover:bg-primary-hover text-white grid place-items-center transition cursor-pointer shrink-0" title="发送">
+            <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
+          </button>
+        </div>
+        <p class="text-[11px] text-muted-foreground mt-2">回答会作为「数据」注入（<code class="text-[10px] bg-muted px-1 rounded">&lt;candidate_answer&gt;</code>），不视为指令 —— 防注入保护。</p>
+      </div>
+    </div>
+
+    <!-- L3 证据侧栏 -->
+    <aside class="rounded-card bg-surface border border-border shadow-card p-5 self-start">
+      <div class="flex items-center justify-between mb-1">
+        <h3 class="font-display font-semibold">能力证据 · 实时累积</h3>
+        <span class="text-[11px] text-primary bg-primary-soft px-2 py-0.5 rounded-full">L3 记忆</span>
+      </div>
+      <p class="text-[12px] text-muted-foreground mb-4">已覆盖 <b class="text-foreground">5/6</b> 维度 · 每轮回答后抽取</p>
+
+      <div class="space-y-3">
+        <div class="rise rounded-lg border border-border p-3">
+          <div class="flex items-center justify-between">
+            <span class="text-[13px] font-medium">机器学习基础</span>
+            <span class="text-[11px] text-muted-foreground">4/5</span>
+          </div>
+          <div class="flex gap-1 mt-1.5">
+            <span class="h-1.5 flex-1 rounded-full bg-primary"></span><span class="h-1.5 flex-1 rounded-full bg-primary"></span><span class="h-1.5 flex-1 rounded-full bg-primary"></span><span class="h-1.5 flex-1 rounded-full bg-primary"></span><span class="h-1.5 flex-1 rounded-full bg-muted"></span>
+          </div>
+          <p class="text-[12px] text-muted-foreground italic mt-2 leading-snug">「过拟合就是模型在训练集上表现很好，但到了测试集上效果明显变差」</p>
+        </div>
+
+        <div class="rise rounded-lg border border-border p-3">
+          <div class="flex items-center justify-between">
+            <span class="text-[13px] font-medium">模型算法深度</span>
+            <span class="text-[11px] text-muted-foreground">3/5</span>
+          </div>
+          <div class="flex gap-1 mt-1.5">
+            <span class="h-1.5 flex-1 rounded-full bg-primary"></span><span class="h-1.5 flex-1 rounded-full bg-primary"></span><span class="h-1.5 flex-1 rounded-full bg-primary"></span><span class="h-1.5 flex-1 rounded-full bg-muted"></span><span class="h-1.5 flex-1 rounded-full bg-muted"></span>
+          </div>
+          <p class="text-[12px] text-muted-foreground italic mt-2 leading-snug">「先加了 Dropout 和 L2 正则，也用数据增强扩充了训练集」</p>
+        </div>
+
+        <div class="rise rounded-lg border border-border p-3">
+          <div class="flex items-center justify-between">
+            <span class="text-[13px] font-medium">项目实战</span>
+            <span class="text-[11px] text-muted-foreground">4/5</span>
+          </div>
+          <div class="flex gap-1 mt-1.5">
+            <span class="h-1.5 flex-1 rounded-full bg-primary"></span><span class="h-1.5 flex-1 rounded-full bg-primary"></span><span class="h-1.5 flex-1 rounded-full bg-primary"></span><span class="h-1.5 flex-1 rounded-full bg-primary"></span><span class="h-1.5 flex-1 rounded-full bg-muted"></span>
+          </div>
+          <p class="text-[12px] text-muted-foreground italic mt-2 leading-snug">「通过看训练集和验证集的 loss 曲线，发现训练 loss 一直在降但验证 loss 开始往上翘」</p>
+        </div>
+
+        <div class="rise rounded-lg border border-dashed border-border p-3 text-center">
+          <span class="text-[12px] text-muted-foreground">+ 面试继续，证据将持续累积…</span>
+        </div>
+      </div>
+
+      <button onclick="showPage(5)" class="w-full mt-4 inline-flex items-center justify-center gap-2 bg-accent hover:bg-[#15803d] text-white text-sm font-medium px-4 py-3 rounded-lg transition cursor-pointer">
+        结束并生成报告
+        <svg class="icon w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
+      </button>
+    </aside>
+  </div>
+</section>
+
+<!-- ============ 页面 5：评估报告 ============ -->
+<section data-page="5" class="hidden">
+  <div class="mb-7 flex items-end justify-between flex-wrap gap-3">
+    <div>
+      <h1 class="font-display text-2xl font-semibold">评估报告</h1>
+      <p class="text-muted-foreground text-sm mt-1">张三 · AI 算法工程师 · 严谨型面试 · 所有评分均绑定候选人原话证据。</p>
+    </div>
+    <div class="flex items-baseline gap-2">
+      <span class="font-display text-4xl font-bold text-primary tabular-nums">78</span>
+      <div>
+        <div class="text-sm font-medium">综合匹配度</div>
+        <div class="text-[12px] text-muted-foreground">/ 100 · 匹配</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 雷达图 + 分维度 -->
+  <div class="grid lg:grid-cols-3 gap-5 mb-5">
+    <div class="lg:col-span-2 rounded-card bg-surface border border-border shadow-card p-5">
+      <h3 class="font-display font-semibold mb-1">能力雷达图</h3>
+      <p class="text-[12px] text-muted-foreground mb-3">岗位专属 6 维 · 满分 5 · 单数据集</p>
+      <div id="radar" style="height:340px"></div>
+    </div>
+    <div class="rounded-card bg-surface border border-border shadow-card p-5">
+      <h3 class="font-display font-semibold mb-3">分维度得分</h3>
+      <div class="space-y-3">
+        <div>
+          <div class="flex justify-between text-[13px]"><span>机器学习基础</span><span class="font-semibold tabular-nums">4.2</span></div>
+          <div class="h-1.5 rounded-full bg-muted mt-1"><div class="h-full bg-primary rounded-full" style="width:84%"></div></div>
+        </div>
+        <div>
+          <div class="flex justify-between text-[13px]"><span>项目实战</span><span class="font-semibold tabular-nums">4.5</span></div>
+          <div class="h-1.5 rounded-full bg-muted mt-1"><div class="h-full bg-accent rounded-full" style="width:90%"></div></div>
+        </div>
+        <div>
+          <div class="flex justify-between text-[13px]"><span>数学理论</span><span class="font-semibold tabular-nums">3.8</span></div>
+          <div class="h-1.5 rounded-full bg-muted mt-1"><div class="h-full bg-primary rounded-full" style="width:76%"></div></div>
+        </div>
+        <div>
+          <div class="flex justify-between text-[13px]"><span>模型算法深度</span><span class="font-semibold tabular-nums">3.6</span></div>
+          <div class="h-1.5 rounded-full bg-muted mt-1"><div class="h-full bg-primary rounded-full" style="width:72%"></div></div>
+        </div>
+        <div>
+          <div class="flex justify-between text-[13px]"><span>场景设计</span><span class="font-semibold tabular-nums">3.4</span></div>
+          <div class="h-1.5 rounded-full bg-muted mt-1"><div class="h-full bg-primary rounded-full" style="width:68%"></div></div>
+        </div>
+        <div>
+          <div class="flex justify-between text-[13px]"><span>工程落地</span><span class="font-semibold tabular-nums">3.0</span></div>
+          <div class="h-1.5 rounded-full bg-muted mt-1"><div class="h-full bg-warning rounded-full" style="width:60%"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 雷达图无障碍数据表 -->
+  <div class="rounded-card bg-surface border border-border shadow-card p-5 mb-5">
+    <h3 class="font-display font-semibold mb-3 text-sm">雷达图数据（无障碍 / 键盘可读）</h3>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 text-center">
+      <div class="rounded-lg bg-background p-3"><div class="text-[12px] text-muted-foreground">机器学习基础</div><div class="font-display font-semibold text-lg tabular-nums">4.2</div></div>
+      <div class="rounded-lg bg-background p-3"><div class="text-[12px] text-muted-foreground">模型算法深度</div><div class="font-display font-semibold text-lg tabular-nums">3.6</div></div>
+      <div class="rounded-lg bg-background p-3"><div class="text-[12px] text-muted-foreground">项目实战</div><div class="font-display font-semibold text-lg tabular-nums">4.5</div></div>
+      <div class="rounded-lg bg-background p-3"><div class="text-[12px] text-muted-foreground">工程落地</div><div class="font-display font-semibold text-lg tabular-nums">3.0</div></div>
+      <div class="rounded-lg bg-background p-3"><div class="text-[12px] text-muted-foreground">场景设计</div><div class="font-display font-semibold text-lg tabular-nums">3.4</div></div>
+      <div class="rounded-lg bg-background p-3"><div class="text-[12px] text-muted-foreground">数学理论</div><div class="font-display font-semibold text-lg tabular-nums">3.8</div></div>
+    </div>
+  </div>
+
+  <!-- 优势 / 劣势 -->
+  <div class="grid md:grid-cols-2 gap-5 mb-5">
+    <div class="rounded-card bg-surface border border-border shadow-card p-5">
+      <h3 class="font-display font-semibold mb-3 flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-success"></span>优势</h3>
+      <ul class="space-y-2.5">
+        <li class="text-[13px] leading-relaxed flex gap-2"><span class="text-success shrink-0">●</span><span>项目实战扎实：图像分类项目完整走通「发现过拟合 → 定位 → 缓解」，<span class="quote-chip inline-block bg-success-bg border-l-2 border-success px-1.5 rounded-sm italic text-success">「通过看训练集和验证集的 loss 曲线」</span></span></li>
+        <li class="text-[13px] leading-relaxed flex gap-2"><span class="text-success shrink-0">●</span><span>机器学习基础牢固：对「过拟合」概念界定准确、能区分训练/测试表现。</span></li>
+      </ul>
+    </div>
+    <div class="rounded-card bg-surface border border-border shadow-card p-5">
+      <h3 class="font-display font-semibold mb-3 flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-danger"></span>待提升</h3>
+      <ul class="space-y-2.5">
+        <li class="text-[13px] leading-relaxed flex gap-2"><span class="text-danger shrink-0">●</span><span>工程落地薄弱：未涉及模型部署、服务化与线上监控（简历缺失项，未出分）。</span></li>
+        <li class="text-[13px] leading-relaxed flex gap-2"><span class="text-danger shrink-0">●</span><span>大模型经验缺失：未体现 Transformer 微调 / 部署的实践。</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 匹配度 + 建议 -->
+  <div class="grid md:grid-cols-2 gap-5 mb-5">
+    <div class="rounded-card bg-surface border border-border shadow-card p-5">
+      <h3 class="font-display font-semibold mb-3">岗位匹配度</h3>
+      <p class="text-[13px] text-muted-foreground leading-relaxed mb-3">综合分 = 规则锚点 × 0.6 + LLM 综合 × 0.4，LLM 单维度调整封顶 ±1 档；无证据维度不出分。</p>
+      <div class="flex items-center gap-3">
+        <div class="text-center"><div class="font-display text-2xl font-bold text-primary tabular-nums">78%</div><div class="text-[11px] text-muted-foreground">综合</div></div>
+        <div class="text-center"><div class="font-display text-2xl font-bold tabular-nums">80%</div><div class="text-[11px] text-muted-foreground">规则 0.6</div></div>
+        <div class="text-center"><div class="font-display text-2xl font-bold tabular-nums">75%</div><div class="text-[11px] text-muted-foreground">LLM 0.4</div></div>
+      </div>
+    </div>
+    <div class="rounded-card bg-surface border border-border shadow-card p-5">
+      <h3 class="font-display font-semibold mb-3">提升建议</h3>
+      <ul class="space-y-2.5 text-[13px] leading-relaxed">
+        <li class="flex gap-2"><span class="text-primary shrink-0">1.</span><span>补 Transformer 注意力机制推导（Q/K/V → softmax → 加权求和），可量化检验。</span></li>
+        <li class="flex gap-2"><span class="text-primary shrink-0">2.</span><span>动手部署一次 LoRA 微调小模型，走通「数据 → 训练 → 推理 → 服务化」全链路。</span></li>
+        <li class="flex gap-2"><span class="text-primary shrink-0">3.</span><span>补 A/B 测试与线上指标（CTR/AUC）的完整实践。</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- STAR + 软素质 -->
+  <div class="grid lg:grid-cols-3 gap-5 mb-5">
+    <div class="lg:col-span-2 rounded-card bg-surface border border-border shadow-card p-5">
+      <h3 class="font-display font-semibold mb-3">STAR 分析 · 图像分类项目</h3>
+      <div class="grid sm:grid-cols-2 gap-3">
+        <div class="rounded-lg bg-background p-3"><div class="text-[11px] font-semibold text-primary uppercase tracking-wide">情境 S</div><p class="text-[13px] leading-relaxed mt-1">课程项目需对 10 类商品图片分类，训练集小、易过拟合。</p></div>
+        <div class="rounded-lg bg-background p-3"><div class="text-[11px] font-semibold text-primary uppercase tracking-wide">任务 T</div><p class="text-[13px] leading-relaxed mt-1">在有限数据下把验证集准确率从 82% 提到 90%+。</p></div>
+        <div class="rounded-lg bg-background p-3"><div class="text-[11px] font-semibold text-primary uppercase tracking-wide">行动 A</div><p class="text-[13px] leading-relaxed mt-1">观测 loss 曲线定位过拟合，加 Dropout + L2 + 数据增强。</p></div>
+        <div class="rounded-lg bg-background p-3"><div class="text-[11px] font-semibold text-primary uppercase tracking-wide">结果 R</div><p class="text-[13px] leading-relaxed mt-1">验证准确率 91%，泛化明显改善。</p></div>
+      </div>
+    </div>
+    <div class="rounded-card bg-surface border border-border shadow-card p-5">
+      <h3 class="font-display font-semibold mb-3">通用软素质</h3>
+      <div class="space-y-2.5">
+        <div class="flex items-center justify-between"><span class="text-[13px]">沟通表达</span><span class="text-[13px] font-semibold tabular-nums">4.0</span></div>
+        <div class="flex items-center justify-between"><span class="text-[13px]">逻辑思维</span><span class="text-[13px] font-semibold tabular-nums">4.0</span></div>
+        <div class="flex items-center justify-between"><span class="text-[13px]">临场应变</span><span class="text-[13px] font-semibold tabular-nums">3.0</span></div>
+      </div>
+      <p class="text-[12px] text-muted-foreground mt-3">辅助维度，不参与匹配度计算。</p>
+    </div>
+  </div>
+
+  <!-- 证据引用汇总 -->
+  <div class="rounded-card bg-background border border-border p-5 mb-6">
+    <h3 class="font-display font-semibold text-sm mb-3 flex items-center gap-2">
+      <svg class="icon w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 01.778-.332 48.294 48.294 0 005.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/></svg>
+      评分证据（只许引用、不许编造）
+    </h3>
+    <div class="flex flex-wrap gap-2">
+      <span class="text-[12px] text-foreground bg-surface border border-border px-3 py-1.5 rounded-lg italic">「过拟合就是模型在训练集上表现很好，但到了测试集上效果明显变差」</span>
+      <span class="text-[12px] text-foreground bg-surface border border-border px-3 py-1.5 rounded-lg italic">「先加了 Dropout 和 L2 正则，也用数据增强扩充了训练集」</span>
+      <span class="text-[12px] text-foreground bg-surface border border-border px-3 py-1.5 rounded-lg italic">「通过看训练集和验证集的 loss 曲线」</span>
+    </div>
+  </div>
+
+  <div class="flex items-center justify-between">
+    <button onclick="showPage(4)" class="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition cursor-pointer">
+      <svg class="icon w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
+      返回面试
+    </button>
+    <button onclick="showPage(1)" class="inline-flex items-center gap-2 bg-surface border border-border hover:bg-muted text-foreground text-sm font-medium px-5 py-3 rounded-lg transition cursor-pointer">重新开始</button>
+  </div>
+</section>
+
+</main>
+
+<footer class="max-w-6xl mx-auto px-5 py-6 text-center text-[11px] text-muted-foreground/70">
+  岗位胜任力评估智能体 · 设计高保真原型 v0.2 · 详见 docs/DESIGN.md · 技术栈 React 18 + Tailwind + ECharts
+</footer>
+
+<script>
+  const pageCount = 5;
+  const pages = document.querySelectorAll('section[data-page]');
+  const steps = document.querySelectorAll('.step');
+
+  function showPage(n) {
+    pages.forEach(p => p.classList.toggle('hidden', parseInt(p.dataset.page) !== n));
+    updateStepper(n);
+    if (n === pageCount) setTimeout(renderRadar, 60);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function updateStepper(n) {
+    steps.forEach(s => {
+      const i = parseInt(s.dataset.step);
+      const dot = s.querySelector('.step-dot');
+      const label = s.querySelector('.step-label');
+      s.classList.toggle('active', i === n);
+      s.classList.toggle('done', i < n);
+      if (i === n) {
+        dot.className = 'step-dot w-7 h-7 rounded-full grid place-items-center text-[12px] font-semibold border transition bg-primary text-white border-primary';
+        label.className = 'step-label ml-2 text-[13px] font-medium text-foreground transition';
+      } else if (i < n) {
+        dot.className = 'step-dot w-7 h-7 rounded-full grid place-items-center text-[12px] font-semibold border transition bg-primary-soft text-primary border-primary-soft';
+        dot.innerHTML = '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>';
+        label.className = 'step-label ml-2 text-[13px] text-foreground transition';
+      } else {
+        dot.className = 'step-dot w-7 h-7 rounded-full grid place-items-center text-[12px] font-semibold border transition bg-surface text-muted-foreground border-border';
+        dot.innerHTML = i;
+        label.className = 'step-label ml-2 text-[13px] text-muted-foreground transition';
+      }
+    });
+  }
+
+  steps.forEach(s => s.addEventListener('click', () => showPage(parseInt(s.dataset.step))));
+
+  // 岗位卡片选择
+  document.querySelectorAll('.pos-card').forEach(c => {
+    c.addEventListener('click', () => {
+      document.querySelectorAll('.pos-card').forEach(x => {
+        x.classList.remove('border-primary');
+        x.classList.add('border-border');
+      });
+      c.classList.remove('border-border');
+      c.classList.add('border-primary');
+    });
+  });
+
+  // 人格选择器
+  document.querySelectorAll('.persona-card').forEach(c => {
+    c.addEventListener('click', () => {
+      const key = c.dataset.persona;
+      const colorMap = { friendly: '#0D9488', rigorous: '#0369A1', stress: '#BE123C' };
+      document.querySelectorAll('.persona-card').forEach(x => {
+        x.classList.remove('persona-active');
+        x.style.borderColor = '#BAE6FD';
+      });
+      c.classList.add('persona-active');
+      c.style.borderColor = colorMap[key];
+    });
+  });
+
+  // 简历字数
+  const ta = document.getElementById('resume');
+  ta.addEventListener('input', () => document.getElementById('resume-count').textContent = (ta.value.length) + ' 字');
+
+  // 雷达图
+  let radarChart = null;
+  function renderRadar() {
+    const el = document.getElementById('radar');
+    if (!el || typeof echarts === 'undefined') return;
+    if (!radarChart) radarChart = echarts.init(el);
+    const dims = ['机器学习基础','模型算法深度','项目实战','工程落地','场景设计','数学理论'];
+    const vals = [4.2, 3.6, 4.5, 3.0, 3.4, 3.8];
+    radarChart.setOption({
+      tooltip: { trigger: 'item' },
+      radar: {
+        center: ['50%','54%'],
+        radius: '66%',
+        splitNumber: 5,
+        indicator: dims.map(d => ({ name: d, max: 5 })),
+        axisName: { color: '#475569', fontSize: 12 },
+        splitLine: { lineStyle: { color: '#E7EFF5' } },
+        splitArea: { areaStyle: { color: ['#F0F9FF','#FFFFFF'] } },
+        axisLine: { lineStyle: { color: '#BAE6FD' } },
+      },
+      series: [{
+        type: 'radar',
+        symbol: 'circle',
+        symbolSize: 6,
+        data: [{ value: vals, name: '张三' }],
+        lineStyle: { color: '#0369A1', width: 2 },
+        itemStyle: { color: '#0369A1' },
+        areaStyle: { color: 'rgba(3,105,161,0.18)' },
+        label: { show: true, color: '#0C4A6E', fontSize: 11, formatter: p => p.value },
+      }],
+    });
+  }
+
+  window.addEventListener('resize', () => radarChart && radarChart.resize());
+  window.addEventListener('load', () => { showPage(1); });
+</script>
+</body>
+</html>

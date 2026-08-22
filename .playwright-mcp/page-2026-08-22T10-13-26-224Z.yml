@@ -1,0 +1,40 @@
+- generic [ref=f2e3]:
+  - banner [ref=f2e4]:
+    - generic [ref=f2e5]:
+      - generic [ref=f2e10]:
+        - generic [ref=f2e11]: 岗位胜任力评估智能体
+        - generic [ref=f2e12]: AI 面试官 · 模拟面试 + 胜任力评估报告
+      - generic [ref=f2e13]: 就绪
+  - navigation [ref=f2e16]:
+    - list [ref=f2e18]:
+      - listitem [ref=f2e19] [cursor=pointer]:
+        - generic [ref=f2e20]: ✓
+        - generic [ref=f2e21]: 岗位选择
+      - listitem [ref=f2e22]
+      - listitem [ref=f2e23] [cursor=pointer]:
+        - generic [ref=f2e24]: ✓
+        - generic [ref=f2e25]: 简历输入
+      - listitem [ref=f2e26]
+      - listitem [ref=f2e27] [cursor=pointer]:
+        - generic [ref=f2e28]: ✓
+        - generic [ref=f2e29]: 能力画像
+      - listitem [ref=f2e30]
+      - listitem [ref=f2e31] [cursor=pointer]:
+        - generic [ref=f2e32]: "4"
+        - generic [ref=f2e33]: 模拟面试
+      - listitem [ref=f2e34]
+      - listitem [ref=f2e35] [cursor=pointer]:
+        - generic [ref=f2e36]: "5"
+        - generic [ref=f2e37]: 评估报告
+  - main [ref=f2e149]:
+    - generic [ref=f2e150]:
+      - generic [ref=f2e151]:
+        - generic [ref=f2e152]: 你好，欢迎参加本次「AI 算法工程师」岗位面试。我们先从「机器学习基础」开始：什么是过拟合？你在项目中是如何缓解过拟合的？
+        - generic [ref=f2e157]:
+          - textbox "输入你的回答…" [ref=f2e158]
+          - button "发送" [disabled] [ref=f2e159]
+      - complementary [ref=f2e161]:
+        - generic [ref=f2e162]:
+          - heading "能力证据 · 实时累积" [level=2] [ref=f2e163]
+          - paragraph [ref=f2e164]: 已覆盖 0 条证据
+        - paragraph [ref=f2e165]: 面试开始后，能力证据会在此实时累积。

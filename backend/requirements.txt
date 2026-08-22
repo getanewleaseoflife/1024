@@ -1,0 +1,8 @@
+# M1 骨架核心依赖（精确 pin，后续按 pip freeze 校准）
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+openai==1.57.0
+pydantic==2.10.3
+pydantic-settings==2.6.1
+# M3 面试核心（RAG / 记忆）追加：chromadb、fastembed、jieba
+# M6 增强项追加：edge-tts

@@ -1,0 +1,75 @@
+- generic [ref=f2e3]:
+  - banner [ref=f2e4]:
+    - generic [ref=f2e5]:
+      - generic [ref=f2e10]:
+        - generic [ref=f2e11]: 岗位胜任力评估智能体
+        - generic [ref=f2e12]: AI 面试官 · 模拟面试 + 胜任力评估报告
+      - generic [ref=f2e13]: 就绪
+  - navigation [ref=f2e16]:
+    - list [ref=f2e18]:
+      - listitem [ref=f2e19] [cursor=pointer]:
+        - generic [ref=f2e20]: ✓
+        - generic [ref=f2e21]: 岗位选择
+      - listitem [ref=f2e22]
+      - listitem [ref=f2e23] [cursor=pointer]:
+        - generic [ref=f2e24]: ✓
+        - generic [ref=f2e25]: 简历输入
+      - listitem [ref=f2e26]
+      - listitem [ref=f2e27] [cursor=pointer]:
+        - generic [ref=f2e28]: "3"
+        - generic [ref=f2e29]: 能力画像
+      - listitem [ref=f2e30]
+      - listitem [ref=f2e31] [cursor=pointer]:
+        - generic [ref=f2e32]: "4"
+        - generic [ref=f2e33]: 模拟面试
+      - listitem [ref=f2e34]
+      - listitem [ref=f2e35] [cursor=pointer]:
+        - generic [ref=f2e36]: "5"
+        - generic [ref=f2e37]: 评估报告
+  - main [ref=f2e96]:
+    - generic [ref=f2e97]:
+      - heading "能力画像" [level=1] [ref=f2e98]
+      - paragraph [ref=f2e99]: 基于简历解析的能力标签与「AI 算法工程师」岗位 Gap 分析。
+    - generic [ref=f2e100]:
+      - heading "候选人基础信息" [level=2] [ref=f2e101]
+      - generic [ref=f2e102]:
+        - generic [ref=f2e103]: 张
+        - generic [ref=f2e104]:
+          - generic [ref=f2e105]: 张三
+          - generic [ref=f2e106]: 本科，XX大学，计算机科学与技术
+      - generic [ref=f2e107]:
+        - generic [ref=f2e108]: Python
+        - generic [ref=f2e109]: PyTorch
+        - generic [ref=f2e110]: TensorFlow
+        - generic [ref=f2e111]: 机器学习
+        - generic [ref=f2e112]: 深度学习
+        - generic [ref=f2e113]: CNN
+        - generic [ref=f2e114]: Transformer
+    - generic [ref=f2e115]:
+      - heading "岗位 Gap 分析 ● 已具备 ● 待考察 ● 缺失" [level=2] [ref=f2e116]:
+        - text: 岗位 Gap 分析
+        - generic [ref=f2e117]:
+          - generic [ref=f2e118]: ● 已具备
+          - generic [ref=f2e119]: ● 待考察
+          - generic [ref=f2e120]: ● 缺失
+      - generic [ref=f2e121]:
+        - generic [ref=f2e122]: 机器学习基础
+        - generic [ref=f2e123]: 模型算法深度
+        - generic [ref=f2e124]: 项目实战经验
+        - generic [ref=f2e125]: 工程落地能力
+        - generic [ref=f2e126]: 场景设计能力
+        - generic [ref=f2e127]: 数学理论功底
+    - generic [ref=f2e128]:
+      - heading "选择面试官人格" [level=2] [ref=f2e129]
+      - generic [ref=f2e130]:
+        - button "随和型 同级工程师 · 轻松引导" [ref=f2e131] [cursor=pointer]:
+          - generic [ref=f2e132]: 随和型
+          - generic [ref=f2e135]: 同级工程师 · 轻松引导
+        - button "✓ 严谨型 资深专家 · 犀利专业" [ref=f2e136] [cursor=pointer]:
+          - generic [ref=f2e137]: ✓
+          - generic [ref=f2e138]: 严谨型
+          - generic [ref=f2e141]: 资深专家 · 犀利专业
+        - button "压力型 HR 主管 · 压迫质疑" [ref=f2e142] [cursor=pointer]:
+          - generic [ref=f2e143]: 压力型
+          - generic [ref=f2e146]: HR 主管 · 压迫质疑
+    - button "开始面试" [ref=f2e147] [cursor=pointer]
