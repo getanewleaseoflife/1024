@@ -1,0 +1,29 @@
+{
+  "position_id": "frontend",
+  "dimensions": [
+    {
+      "name": "HTML 与 CSS",
+      "keywords": ["HTML", "CSS", "Flex", "Grid", "响应式", "BFC", "语义化", "布局", "Sass", "Less", "适配", "盒模型"]
+    },
+    {
+      "name": "JavaScript 基础",
+      "keywords": ["JavaScript", "ES6", "闭包", "原型", "异步", "Promise", "async", "事件循环", "Event Loop", "作用域", "TypeScript"]
+    },
+    {
+      "name": "前端框架",
+      "keywords": ["React", "Vue", "虚拟DOM", "diff", "Hooks", "组件", "状态管理", "Redux", "Vuex", "Pinia", "生命周期", "框架"]
+    },
+    {
+      "name": "工程化构建",
+      "keywords": ["Webpack", "Vite", "模块化", "loader", "plugin", "CI/CD", "npm", "打包", "构建", "ESLint", "Babel", "工程化"]
+    },
+    {
+      "name": "性能优化",
+      "keywords": ["性能", "优化", "首屏", "懒加载", "缓存", "CDN", "图片优化", "重绘", "重排", "性能监控", "白屏", "加载"]
+    },
+    {
+      "name": "项目实战经验",
+      "keywords": ["项目", "实战", "跨端", "兼容", "调试", "上线", "前端", "H5", "小程序", "SSR", "重构"]
+    }
+  ]
+}

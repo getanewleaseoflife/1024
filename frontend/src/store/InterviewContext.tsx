@@ -10,6 +10,7 @@ interface InterviewState {
   gaps: GapItem[]
   evidence: Evidence[]
   fastMode: boolean
+  interviewDone: boolean
 }
 
 interface InterviewContextValue {
@@ -20,17 +21,20 @@ interface InterviewContextValue {
   addEvidence: (evidence: Evidence) => void
   resetEvidence: () => void
   setFastMode: (fastMode: boolean) => void
+  setInterviewDone: (done: boolean) => void
 }
 
+// positionId 初始为空：岗位必须由用户主动选择，无默认值
 const defaultState: InterviewState = {
-  positionId: 'ai_algorithm',
-  positionName: 'AI 算法工程师',
+  positionId: '',
+  positionName: '',
   personaId: 'rigorous',
   resumeText: '',
   profile: null,
   gaps: [],
   evidence: [],
   fastMode: false,
+  interviewDone: false,
 }
 
 const InterviewContext = createContext<InterviewContextValue | null>(null)
@@ -41,13 +45,35 @@ export function InterviewProvider({ children }: { children: ReactNode }) {
   const value = useMemo<InterviewContextValue>(
     () => ({
       state,
-      setPosition: (id, name) => setState((s) => ({ ...s, positionId: id, positionName: name })),
-      setPersona: (id) => setState((s) => ({ ...s, personaId: id })),
+      // 改岗位 → 级联重置下游（简历/画像/证据/面试结束）
+      setPosition: (id, name) =>
+        setState((s) => ({
+          ...s,
+          positionId: id,
+          positionName: name,
+          resumeText: '',
+          profile: null,
+          gaps: [],
+          evidence: [],
+          interviewDone: false,
+        })),
+      // 改人格 → 重置证据/面试结束（旧人格面试作废）
+      setPersona: (id) =>
+        setState((s) => ({ ...s, personaId: id, evidence: [], interviewDone: false })),
+      // 改简历 → 重置证据/面试结束
       setResume: (text, profile, gaps) =>
-        setState((s) => ({ ...s, resumeText: text, profile, gaps })),
+        setState((s) => ({
+          ...s,
+          resumeText: text,
+          profile,
+          gaps,
+          evidence: [],
+          interviewDone: false,
+        })),
       addEvidence: (evidence) => setState((s) => ({ ...s, evidence: [...s.evidence, evidence] })),
       resetEvidence: () => setState((s) => ({ ...s, evidence: [] })),
       setFastMode: (fastMode) => setState((s) => ({ ...s, fastMode })),
+      setInterviewDone: (done) => setState((s) => ({ ...s, interviewDone: done })),
     }),
     [state],
   )

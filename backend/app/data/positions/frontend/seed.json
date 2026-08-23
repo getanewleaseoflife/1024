@@ -1,0 +1,109 @@
+{
+  "position_id": "frontend",
+  "position_name": "前端开发工程师",
+  "tagline": "Web 前端 / 框架 / 工程化",
+  "dimensions": [
+    {
+      "name": "HTML 与 CSS",
+      "key_points": ["语义化标签", "Flex/Grid 布局", "响应式与适配", "BFC 与层叠"],
+      "questions": [
+        {
+          "q": "讲一下 Flex 布局的常用属性，以及它和 Grid 的适用场景区别？",
+          "answer_points": ["主轴/交叉轴", "justify/align", "flex 伸缩", "一维 vs 二维布局", "各自适用场景"]
+        },
+        {
+          "q": "什么是 BFC？它解决了哪些问题？",
+          "answer_points": ["块级格式化上下文", "触发条件", "外边距塌陷", "清除浮动", "两栏自适应"]
+        }
+      ],
+      "rubric": [
+        { "level": 1, "desc": "只会堆样式，说不出布局原理" },
+        { "level": 2, "desc": "能讲常用属性，但原理不深" },
+        { "level": 3, "desc": "能讲清布局机制与适用场景" }
+      ]
+    },
+    {
+      "name": "JavaScript 基础",
+      "key_points": ["闭包与作用域", "原型与继承", "异步与 Promise", "ES6+ 特性"],
+      "questions": [
+        {
+          "q": "讲讲闭包是什么？它在项目里有哪些实际应用？",
+          "answer_points": ["函数+词法作用域", "访问外部变量", "防抖节流", "私有变量", "模块化", "内存泄漏风险"]
+        },
+        {
+          "q": "事件循环（Event Loop）是怎么工作的？宏任务和微任务的区别？",
+          "answer_points": ["调用栈", "宏任务队列", "微任务队列", "执行顺序", "Promise/setTimeout 差异"]
+        }
+      ],
+      "rubric": [
+        { "level": 1, "desc": "基础语法不牢，概念模糊" },
+        { "level": 2, "desc": "能写代码，但原理讲不清" },
+        { "level": 3, "desc": "能深入讲清底层机制" }
+      ]
+    },
+    {
+      "name": "前端框架",
+      "key_points": ["React/Vue 原理", "组件化与状态管理", "虚拟 DOM 与 diff", "生命周期与 Hooks"],
+      "questions": [
+        {
+          "q": "React 的虚拟 DOM 和 diff 算法为什么要这么设计？",
+          "answer_points": ["减少真实 DOM 操作", "同层比较", "key 的作用", "时间复杂度", "Fiber 调度"]
+        },
+        {
+          "q": "组件间通信有哪些方式？各自适用什么场景？",
+          "answer_points": ["props", "context", "状态管理库", "事件总线", "父传子/子传父/跨层级"]
+        }
+      ],
+      "rubric": [
+        { "level": 1, "desc": "只会用框架，不懂原理" },
+        { "level": 2, "desc": "知道常用 API，原理浅" },
+        { "level": 3, "desc": "能讲清渲染机制与状态管理设计" }
+      ]
+    },
+    {
+      "name": "工程化构建",
+      "key_points": ["模块化规范", "Webpack/Vite", "代码规范与 CI/CD", "包管理与依赖"],
+      "questions": [
+        {
+          "q": "Webpack 的打包流程是怎样的？loader 和 plugin 有什么区别？",
+          "answer_points": ["入口/依赖图/打包输出", "loader 转换文件", "plugin 扩展构建", "热更新", "代码分割"]
+        }
+      ],
+      "rubric": [
+        { "level": 1, "desc": "没接触过构建工具" },
+        { "level": 2, "desc": "会用但不懂原理" },
+        { "level": 3, "desc": "能讲清打包流程并做过优化" }
+      ]
+    },
+    {
+      "name": "性能优化",
+      "key_points": ["首屏优化", "懒加载与缓存", "渲染性能", "网络优化"],
+      "questions": [
+        {
+          "q": "一个页面首屏加载很慢，你会从哪些方面排查和优化？",
+          "answer_points": ["资源体积与压缩", "懒加载/按需加载", "缓存策略", "CDN", "图片优化", "减少重绘重排", "性能监控"]
+        }
+      ],
+      "rubric": [
+        { "level": 1, "desc": "无优化意识" },
+        { "level": 2, "desc": "能列一些手段，但不成体系" },
+        { "level": 3, "desc": "能系统化定位瓶颈并给出方案" }
+      ]
+    },
+    {
+      "name": "项目实战经验",
+      "key_points": ["项目完整度", "跨端与兼容", "问题排查"],
+      "questions": [
+        {
+          "q": "讲一个你最有代表性的前端项目，遇到的最大技术挑战是什么？",
+          "answer_points": ["项目背景", "个人职责", "具体难点", "解决思路", "可量化结果"]
+        }
+      ],
+      "rubric": [
+        { "level": 1, "desc": "只能泛泛描述" },
+        { "level": 2, "desc": "能讲清流程，深度不足" },
+        { "level": 3, "desc": "结构化表达，突出贡献与深度" }
+      ]
+    }
+  ]
+}

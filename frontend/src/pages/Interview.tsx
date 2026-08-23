@@ -137,7 +137,7 @@ function EvidencePanel({ evidence }: { evidence: Evidence[] }) {
 export function Interview() {
   const navigate = useNavigate()
   const { t } = useTranslation()
-  const { state, addEvidence, resetEvidence } = useInterview()
+  const { state, addEvidence, resetEvidence, setInterviewDone } = useInterview()
   const [sessionId, setSessionId] = useState('')
   const [messages, setMessages] = useState<Message[]>([])
   const [streamText, setStreamText] = useState('')
@@ -191,6 +191,7 @@ export function Interview() {
           setStreamText(full)
         } else if (event.type === 'done') {
           isClosed = Boolean(event.closed)
+          if (isClosed) setInterviewDone(true)
         }
       })
     } catch (e) {

@@ -1,0 +1,29 @@
+{
+  "position_id": "java",
+  "dimensions": [
+    {
+      "name": "语言与 JVM",
+      "keywords": ["Java", "JVM", "GC", "垃圾回收", "集合", "HashMap", "多态", "继承", "异常", "泛型", "String", "JMM", "类加载"]
+    },
+    {
+      "name": "框架与中间件",
+      "keywords": ["Spring", "SpringBoot", "SpringCloud", "IOC", "AOP", "MyBatis", "Redis", "消息队列", "RabbitMQ", "Kafka", "RocketMQ", "中间件"]
+    },
+    {
+      "name": "并发编程",
+      "keywords": ["并发", "多线程", "线程池", "synchronized", "ReentrantLock", "volatile", "CAS", "AQS", "锁", "ThreadLocal", "并发编程"]
+    },
+    {
+      "name": "数据库与缓存",
+      "keywords": ["MySQL", "SQL", "索引", "事务", "Redis", "缓存", "B+树", "分库分表", "慢查询", "优化", "数据库"]
+    },
+    {
+      "name": "系统设计",
+      "keywords": ["微服务", "分布式", "高并发", "高可用", "限流", "熔断", "降级", "分布式事务", "秒杀", "架构设计", "服务治理"]
+    },
+    {
+      "name": "项目实战经验",
+      "keywords": ["项目", "实战", "性能优化", "调优", "排查", "上线", "重构", "后端", "服务端", "接口", "压测"]
+    }
+  ]
+}

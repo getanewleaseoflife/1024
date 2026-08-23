@@ -3,6 +3,8 @@
 import json
 from pathlib import Path
 
+from pydantic import ValidationError
+
 from app.schemas.resume import GapItem, ResumeParseResult, ResumeProfile
 from app.services.llm import chat
 
@@ -34,16 +36,19 @@ def _load_keywords(position_id: str) -> dict[str, list[str]]:
 
 
 def _extract_profile(resume_text: str) -> ResumeProfile:
-    raw = chat(
-        [{"role": "user", "content": _EXTRACT_PROMPT.replace("{resume}", resume_text)}],
-        temperature=0,
-    )
     try:
+        raw = chat(
+            [{"role": "user", "content": _EXTRACT_PROMPT.replace("{resume}", resume_text)}],
+            temperature=0,
+        )
         data = json.loads(raw)
-    except json.JSONDecodeError:
-        # 容错：解析失败时回退为空画像
+        return ResumeProfile(**data)
+    except (json.JSONDecodeError, ValidationError, TypeError):
+        # 容错：LLM 返回非 JSON 或字段类型不符时，回退为空画像
         return ResumeProfile()
-    return ResumeProfile(**data)
+    except Exception:
+        # 容错：LLM 调用失败（网络/API 错误）时，回退为空画像，保证接口不 500
+        return ResumeProfile()
 
 
 def _match_gap(profile: ResumeProfile, keywords: dict[str, list[str]]) -> list[GapItem]:

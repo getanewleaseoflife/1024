@@ -1,6 +1,7 @@
 import { Fragment } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { useInterview } from '../store/InterviewContext'
 
 interface Step {
   path: string
@@ -19,7 +20,21 @@ export function Stepper() {
   const navigate = useNavigate()
   const location = useLocation()
   const { t } = useTranslation()
+  const { state } = useInterview()
   const currentIndex = STEPS.findIndex((s) => s.path === location.pathname)
+
+  // 环节门禁：只有完成上一个环节，才能进入下一个
+  const reachable = [
+    true, // 岗位选择：始终可进
+    state.positionId !== '', // 简历输入：已选岗位
+    state.profile !== null, // 能力画像：简历已解析
+    state.profile !== null, // 模拟面试：画像已生成
+    state.interviewDone, // 评估报告：面试完全结束
+  ]
+
+  const handleClick = (step: Step, index: number) => {
+    if (reachable[index]) navigate(step.path)
+  }
 
   return (
     <nav className="bg-surface/70 backdrop-blur border-b border-border sticky top-16 z-30">
@@ -28,30 +43,35 @@ export function Stepper() {
           {STEPS.map((step, i) => {
             const isDone = i < currentIndex
             const isCurrent = i === currentIndex
+            const locked = !reachable[i]
             return (
               <Fragment key={step.path}>
                 <li
-                  className="flex items-center cursor-pointer group"
-                  onClick={() => navigate(step.path)}
+                  className={`flex items-center ${locked ? 'cursor-not-allowed opacity-45' : 'cursor-pointer group'}`}
+                  onClick={() => handleClick(step, i)}
                 >
                   <span
                     className={`w-7 h-7 rounded-full grid place-items-center text-[12px] font-semibold border transition ${
-                      isCurrent
-                        ? 'bg-primary text-white border-primary'
-                        : isDone
-                          ? 'bg-primary/10 text-primary border-primary'
-                          : 'bg-surface text-muted-foreground border-border'
+                      locked
+                        ? 'bg-surface text-muted-foreground border-border'
+                        : isCurrent
+                          ? 'bg-primary text-white border-primary'
+                          : isDone
+                            ? 'bg-primary/10 text-primary border-primary'
+                            : 'bg-surface text-muted-foreground border-border'
                     }`}
                   >
                     {isDone ? '✓' : i + 1}
                   </span>
                   <span
                     className={`ml-2 text-[13px] transition ${
-                      isCurrent
-                        ? 'text-foreground font-medium'
-                        : isDone
-                          ? 'text-foreground'
-                          : 'text-muted-foreground group-hover:text-foreground'
+                      locked
+                        ? 'text-muted-foreground'
+                        : isCurrent
+                          ? 'text-foreground font-medium'
+                          : isDone
+                            ? 'text-foreground'
+                            : 'text-muted-foreground group-hover:text-foreground'
                     }`}
                   >
                     {t(step.labelKey)}
