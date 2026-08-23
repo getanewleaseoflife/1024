@@ -22,7 +22,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | 层 | 选型 |
 |----|------|
 | 前端 | React 18 + Vite + TypeScript + Tailwind + ECharts |
-| 后端 | Python 3.10 + FastAPI |
+| 后端 | Python 3.10+ / FastAPI |
 | 大模型 | DeepSeek（OpenAI 兼容协议，官方 `openai` SDK） |
 | RAG 向量库 | Chroma（嵌入式）；嵌入模型 BGE `bge-small-zh-v1.5`（fastembed / ONNX，本地，**无 torch**） |
 | 记忆 | 自定义状态机 + SQLite（`tempfile` 临时库） |

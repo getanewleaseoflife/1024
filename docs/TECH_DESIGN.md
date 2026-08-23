@@ -14,7 +14,7 @@
 | 前端 | React 18 + Vite + TypeScript | 生态成熟，组件化，配合 ui-ux-pro-max 落地 |
 | 前端样式 | Tailwind CSS | 快速实现专业简洁风格 + 设计 token |
 | 图表 | ECharts（雷达图等） | 雷达图/图表最强方案，中文文档全 |
-| 后端 | Python 3.10+ + FastAPI | 大模型/简历解析/RAG 生态最成熟 |
+| 后端 | Python 3.10+ / FastAPI | 大模型/简历解析/RAG 生态最成熟 |
 | 大模型 | DeepSeek（OpenAI 兼容协议）+ 官方 `openai` SDK | 最成熟 SDK，可换供应商，流式/JSON 模式现成 |
 | RAG 向量库 | Chroma（嵌入式） | 轻量、零服务依赖、本地持久化，P0 最省事 |
 | 嵌入模型 | BGE `bge-small-zh-v1.5`（sentence-transformers / torch，本地） | DeepSeek 无 embedding；sentence-transformers 是嵌入标准路径，本地中文嵌入免费 |
@@ -185,7 +185,7 @@ interview_session（会话）
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| POST | `/api/positions` | 获取岗位列表（3 个） |
+| GET | `/api/positions` | 获取岗位列表（3 个） |
 | POST | `/api/resume/parse` | 简历解析（文本/PDF）→ 画像 + Gap |
 | POST | `/api/interview/start` | 创建会话，返回开场白（流式） |
 | POST | `/api/interview/answer` | 提交回答，返回追问（SSE 流式） |

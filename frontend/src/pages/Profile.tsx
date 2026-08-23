@@ -46,7 +46,7 @@ const GAP_STYLE = {
 
 export function Profile() {
   const navigate = useNavigate()
-  const { state, setPersona } = useInterview()
+  const { state, setPersona, setFastMode } = useInterview()
   const [persona, setPersonaLocal] = useState(state.personaId)
   const { profile, gaps } = state
 
@@ -153,6 +153,16 @@ export function Profile() {
           })}
         </div>
       </section>
+
+      <label className="flex items-center gap-2 mb-4 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={state.fastMode}
+          onChange={(e) => setFastMode(e.target.checked)}
+          className="w-4 h-4 accent-primary"
+        />
+        <span className="text-sm">快速演示模式（只面试 3 个维度）</span>
+      </label>
 
       <button
         onClick={() => navigate('/interview')}

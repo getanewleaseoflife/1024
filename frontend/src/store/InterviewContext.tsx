@@ -9,6 +9,7 @@ interface InterviewState {
   profile: ResumeProfile | null
   gaps: GapItem[]
   evidence: Evidence[]
+  fastMode: boolean
 }
 
 interface InterviewContextValue {
@@ -18,6 +19,7 @@ interface InterviewContextValue {
   setResume: (text: string, profile: ResumeProfile, gaps: GapItem[]) => void
   addEvidence: (evidence: Evidence) => void
   resetEvidence: () => void
+  setFastMode: (fastMode: boolean) => void
 }
 
 const defaultState: InterviewState = {
@@ -28,6 +30,7 @@ const defaultState: InterviewState = {
   profile: null,
   gaps: [],
   evidence: [],
+  fastMode: false,
 }
 
 const InterviewContext = createContext<InterviewContextValue | null>(null)
@@ -44,6 +47,7 @@ export function InterviewProvider({ children }: { children: ReactNode }) {
         setState((s) => ({ ...s, resumeText: text, profile, gaps })),
       addEvidence: (evidence) => setState((s) => ({ ...s, evidence: [...s.evidence, evidence] })),
       resetEvidence: () => setState((s) => ({ ...s, evidence: [] })),
+      setFastMode: (fastMode) => setState((s) => ({ ...s, fastMode })),
     }),
     [state],
   )

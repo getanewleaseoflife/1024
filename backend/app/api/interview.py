@@ -18,6 +18,7 @@ class StartRequest(BaseModel):
     position_id: str = "ai_algorithm"
     persona_id: str = "rigorous"
     resume_text: str = ""
+    fast_mode: bool = False
 
 
 class AnswerRequest(BaseModel):
@@ -27,7 +28,7 @@ class AnswerRequest(BaseModel):
 
 @router.post("/interview/start")
 def start(req: StartRequest) -> dict:
-    orch = InterviewOrchestrator(req.position_id, req.persona_id, req.resume_text)
+    orch = InterviewOrchestrator(req.position_id, req.persona_id, req.resume_text, req.fast_mode)
     sid = uuid4().hex
     _SESSIONS[sid] = orch
     return {

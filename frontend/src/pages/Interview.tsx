@@ -109,6 +109,7 @@ export function Interview() {
       position_id: state.positionId,
       persona_id: state.personaId,
       resume_text: state.resumeText,
+      fast_mode: state.fastMode,
     })
       .then((res) => {
         setSessionId(res.session_id)

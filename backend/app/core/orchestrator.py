@@ -24,7 +24,7 @@ def _load_seed(position_id: str) -> dict:
 
 
 class InterviewOrchestrator:
-    def __init__(self, position_id: str, persona_id: str, resume_text: str = ""):
+    def __init__(self, position_id: str, persona_id: str, resume_text: str = "", fast_mode: bool = False):
         seed = _load_seed(position_id)
         ensure_seed(position_id)
         self.position_id = position_id
@@ -32,6 +32,8 @@ class InterviewOrchestrator:
         self.persona_id = persona_id
         self.resume_text = resume_text
         self.dimensions = [d["name"] for d in seed["dimensions"]]
+        if fast_mode:
+            self.dimensions = self.dimensions[:3]  # 快速演示模式：只面试 3 个维度
         self._dim_data = {d["name"]: d for d in seed["dimensions"]}
         self.memory = MemoryStore(uuid4().hex)
         self.state = "opening"

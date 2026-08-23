@@ -27,7 +27,7 @@
 └───────────────────────────┬──────────────────────────────────┘
                             │ REST + SSE（/api/*）
 ┌───────────────────────────▼──────────────────────────────────┐
-│                    后端  FastAPI（Python 3.10）                │
+│                    后端  FastAPI（Python 3.10+）                │
 │                                                               │
 │   ┌─────────┐  ┌──────────┐  ┌──────────┐  ┌─────────┐       │
 │   │ 简历解析 │  │ 面试编排器 │  │ 报告生成器 │  │ 语音服务 │      │
@@ -63,7 +63,7 @@
 | 层 | 选型 |
 |----|------|
 | 前端 | React 18 + Vite + TypeScript + Tailwind + ECharts |
-| 后端 | Python 3.10 + FastAPI |
+| 后端 | Python 3.10+ / FastAPI |
 | LLM | DeepSeek（OpenAI 兼容协议，官方 `openai` SDK） |
 | RAG | Chroma（嵌入式）+ BGE `bge-small-zh-v1.5`（fastembed / ONNX，本地，无 torch）+ jieba 关键词 |
 | 记忆 | 状态机 + SQLite（`tempfile` 临时库） |
@@ -247,7 +247,7 @@ report（报告）: id, session_id, radar_data(JSON), strengths, weaknesses, mat
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| POST | `/api/positions` | 岗位列表（3 个） |
+| GET | `/api/positions` | 岗位列表（3 个） |
 | POST | `/api/resume/parse` | 简历解析（文本/PDF）→ 画像 + Gap |
 | POST | `/api/interview/start` | 创建会话，返回开场白（流式） |
 | POST | `/api/interview/answer` | 提交回答，返回追问（SSE 流式） |
@@ -305,7 +305,7 @@ IDLE → OPENING(开场) → ASK(提问) → WAIT(等回答)
 
 ### 12.2 环境与边界
 
-- 运行环境 Windows 11，Python 3.10；P0 本地运行（不强制 Docker）。
+- 运行环境 Windows 11，Python 3.10+；P0 本地运行（不强制 Docker）。
 - P0 单会话；**预留** i18n 文案资源化、会话隔离（P1 加账号）。
 - 明确不做：数字人 / 表情情感识别 / 企业端后台 / 移动端。
 
