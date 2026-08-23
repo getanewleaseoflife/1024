@@ -1,0 +1,104 @@
+{
+  "header": {
+    "title": "岗位胜任力评估智能体",
+    "subtitle": "AI 面试官 · 模拟面试 + 胜任力评估报告",
+    "ready": "就绪"
+  },
+  "stepper": {
+    "position": "岗位选择",
+    "resume": "简历输入",
+    "profile": "能力画像",
+    "interview": "模拟面试",
+    "report": "评估报告"
+  },
+  "position": {
+    "title": "选择目标岗位",
+    "desc": "选择一个岗位，AI 面试官将基于该岗位的胜任力模型进行多轮面试与能力评估。",
+    "available": "可用",
+    "pending": "待扩展",
+    "start": "开始面试",
+    "soon": "即将支持",
+    "loading": "加载岗位中…"
+  },
+  "resume": {
+    "title": "简历输入",
+    "desc": "粘贴简历文本，系统将提取能力标签并构建候选人画像（目标岗位：{{position}}）。",
+    "label": "简历文本",
+    "placeholder": "在此粘贴简历文本，例如：教育背景、技能栈、项目经历、实习经历、证书奖项…",
+    "privacy": "简历原文仅本次会话内使用，不上传、不落盘",
+    "parse": "解析简历",
+    "parsing": "解析中…",
+    "uploadPdf": "上传 PDF"
+  },
+  "profile": {
+    "title": "能力画像",
+    "desc": "基于简历解析的能力标签与「{{position}}」岗位 Gap 分析。",
+    "basicInfo": "候选人基础信息",
+    "unnamed": "未命名候选人",
+    "eduEmpty": "学历信息待补充",
+    "gapTitle": "岗位 Gap 分析",
+    "have": "已具备",
+    "waiting": "待考察",
+    "missing": "缺失",
+    "gapEmpty": "暂无 Gap 数据，请先在简历输入页解析简历。",
+    "personaTitle": "选择面试官人格",
+    "fastMode": "快速演示模式（只面试 3 个维度）",
+    "start": "开始面试"
+  },
+  "persona": {
+    "friendly": "随和型",
+    "friendlyDesc": "同级工程师 · 轻松引导",
+    "rigorous": "严谨型",
+    "rigorousDesc": "资深专家 · 犀利专业",
+    "stress": "压力型",
+    "stressDesc": "HR 主管 · 压迫质疑"
+  },
+  "interview": {
+    "evidenceTitle": "能力证据 · 实时累积",
+    "evidenceCount": "已覆盖 {{count}} 条证据",
+    "evidenceEmpty": "面试开始后，能力证据会在此实时累积。",
+    "placeholder": "输入你的回答…",
+    "send": "发送",
+    "thinking": "正在思考…",
+    "play": "播报",
+    "voiceInput": "语音输入",
+    "listening": "聆听中",
+    "finish": "面试结束，查看评估报告 →",
+    "startFailed": "面试启动失败：{{error}}"
+  },
+  "report": {
+    "title": "评估报告",
+    "desc": "基于本次面试的客观能力评估与提升建议。",
+    "match": "综合匹配度",
+    "radar": "能力雷达图",
+    "dimension": "维度",
+    "score": "得分",
+    "notExamined": "待考察",
+    "dimensionScore": "分维度得分",
+    "strength": "优势",
+    "weakness": "待提升",
+    "suggestion": "提升建议",
+    "star": "STAR 项目分析",
+    "situation": "情境 Situation",
+    "task": "任务 Task",
+    "action": "行动 Action",
+    "result": "结果 Result",
+    "communication": "沟通表达",
+    "logic": "逻辑思维",
+    "adaptability": "临场应变",
+    "generating": "报告生成中…",
+    "failed": "无法生成报告，请先完成面试。"
+  },
+  "matchLevel": {
+    "excellent": "优秀",
+    "good": "良好",
+    "improve": "待提升",
+    "weak": "需加强"
+  },
+  "history": {
+    "title": "我的面试历史",
+    "empty": "暂无历史记录",
+    "match": "匹配度",
+    "view": "查看"
+  }
+}

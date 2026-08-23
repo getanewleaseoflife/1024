@@ -1,8 +1,17 @@
 import { useEffect, useState } from 'react'
-import { apiPost } from '../api/client'
+import { useTranslation } from 'react-i18next'
+import { useSearchParams } from 'react-router-dom'
+import { apiGet, apiPost } from '../api/client'
 import type { Report as ReportData } from '../api/types'
+import { getUserId } from '../api/user'
 import { useInterview } from '../store/InterviewContext'
 import { RadarChart } from '../components/RadarChart'
+
+const SOFT_SKILL_KEYS: Record<string, string> = {
+  沟通表达: 'report.communication',
+  逻辑思维: 'report.logic',
+  临场应变: 'report.adaptability',
+}
 
 function StarCell({ label, text }: { label: string; text: string }) {
   return (
@@ -13,41 +22,50 @@ function StarCell({ label, text }: { label: string; text: string }) {
   )
 }
 
-function matchLevel(score: number): { label: string; chip: string } {
-  if (score >= 85) return { label: '优秀', chip: 'text-success bg-success-bg' }
-  if (score >= 70) return { label: '良好', chip: 'text-primary bg-primary-soft' }
-  if (score >= 60) return { label: '待提升', chip: 'text-warning bg-warning-bg' }
-  return { label: '需加强', chip: 'text-danger bg-danger-bg' }
+function matchLevel(score: number): { labelKey: string; chip: string } {
+  if (score >= 85) return { labelKey: 'matchLevel.excellent', chip: 'text-success bg-success-bg' }
+  if (score >= 70) return { labelKey: 'matchLevel.good', chip: 'text-primary bg-primary-soft' }
+  if (score >= 60) return { labelKey: 'matchLevel.improve', chip: 'text-warning bg-warning-bg' }
+  return { labelKey: 'matchLevel.weak', chip: 'text-danger bg-danger-bg' }
 }
 
 export function Report() {
+  const { t } = useTranslation()
   const { state } = useInterview()
   const [report, setReport] = useState<ReportData | null>(null)
   const [loading, setLoading] = useState(true)
 
+  const [searchParams] = useSearchParams()
+  const historyId = searchParams.get('history_id')
+
   useEffect(() => {
-    apiPost<ReportData>('/report/generate', {
-      session_id: '',
-      position_id: state.positionId,
-      evidence: state.evidence,
-      dialogues: [],
-    })
-      .then(setReport)
-      .catch(() => setReport(null))
-      .finally(() => setLoading(false))
+    if (historyId) {
+      apiGet<{ report: ReportData }>(`/history/${historyId}`)
+        .then((d) => setReport(d.report))
+        .catch(() => setReport(null))
+        .finally(() => setLoading(false))
+    } else {
+      apiPost<ReportData>('/report/generate', {
+        session_id: '',
+        position_id: state.positionId,
+        persona_id: state.personaId,
+        user_id: getUserId(),
+        evidence: state.evidence,
+        dialogues: [],
+      })
+        .then(setReport)
+        .catch(() => setReport(null))
+        .finally(() => setLoading(false))
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [historyId])
 
   if (loading) {
-    return <main className="max-w-5xl mx-auto px-5 py-10 text-muted-foreground">报告生成中…</main>
+    return <main className="max-w-5xl mx-auto px-5 py-10 text-muted-foreground">{t('report.generating')}</main>
   }
 
   if (!report) {
-    return (
-      <main className="max-w-5xl mx-auto px-5 py-10 text-muted-foreground">
-        无法生成报告，请先完成面试。
-      </main>
-    )
+    return <main className="max-w-5xl mx-auto px-5 py-10 text-muted-foreground">{t('report.failed')}</main>
   }
 
   const level = matchLevel(report.match_score)
@@ -55,20 +73,18 @@ export function Report() {
   return (
     <main className="max-w-5xl mx-auto px-5 py-10 space-y-6">
       <div>
-        <h1 className="font-display text-2xl font-semibold">评估报告</h1>
-        <p className="text-muted-foreground mt-2">基于本次面试的客观能力评估与提升建议。</p>
+        <h1 className="font-display text-2xl font-semibold">{t('report.title')}</h1>
+        <p className="text-muted-foreground mt-2">{t('report.desc')}</p>
       </div>
 
       {/* 综合匹配度 */}
       <section className="bg-surface border border-border rounded-card p-6 shadow-card flex items-center justify-between">
         <div>
-          <div className="text-sm text-muted-foreground mb-1">综合匹配度</div>
+          <div className="text-sm text-muted-foreground mb-1">{t('report.match')}</div>
           <div className="flex items-baseline gap-3">
-            <span className="font-display text-5xl font-bold text-primary">
-              {report.match_score}%
-            </span>
+            <span className="font-display text-5xl font-bold text-primary">{report.match_score}%</span>
             <span className={`text-sm font-medium px-2 py-0.5 rounded-full ${level.chip}`}>
-              {level.label}
+              {t(level.labelKey)}
             </span>
           </div>
         </div>
@@ -76,24 +92,23 @@ export function Report() {
           <div>{report.position_name}</div>
           <div>
             {state.personaId === 'rigorous'
-              ? '严谨型'
+              ? t('persona.rigorous')
               : state.personaId === 'friendly'
-                ? '随和型'
-                : '压力型'}
-            面试官
+                ? t('persona.friendly')
+                : t('persona.stress')}
           </div>
         </div>
       </section>
 
       {/* 能力雷达图 */}
       <section className="bg-surface border border-border rounded-card p-6 shadow-card">
-        <h2 className="font-medium mb-4">能力雷达图</h2>
+        <h2 className="font-medium mb-4">{t('report.radar')}</h2>
         <RadarChart indicators={report.radar} />
         <table className="mt-4 w-full text-[13px]" role="table">
           <thead>
             <tr className="text-left text-muted-foreground border-b border-border">
-              <th className="py-2 font-medium">维度</th>
-              <th className="py-2 font-medium">得分</th>
+              <th className="py-2 font-medium">{t('report.dimension')}</th>
+              <th className="py-2 font-medium">{t('report.score')}</th>
             </tr>
           </thead>
           <tbody>
@@ -102,7 +117,7 @@ export function Report() {
                 <td className="py-2">{r.name}</td>
                 <td className="py-2">
                   {r.value === null ? (
-                    <span className="text-neutral">待考察</span>
+                    <span className="text-neutral">{t('report.notExamined')}</span>
                   ) : (
                     <span>{r.value} / 5</span>
                   )}
@@ -115,7 +130,7 @@ export function Report() {
 
       {/* 分维度得分卡（证据绑定） */}
       <section className="bg-surface border border-border rounded-card p-6 shadow-card">
-        <h2 className="font-medium mb-4">分维度得分</h2>
+        <h2 className="font-medium mb-4">{t('report.dimensionScore')}</h2>
         <div className="space-y-3">
           {report.dimension_scores.map((d) => (
             <div key={d.name} className="flex items-center gap-4">
@@ -136,7 +151,7 @@ export function Report() {
                   「{d.quote}」
                 </span>
               ) : (
-                <span className="flex-1 text-[12px] text-neutral">待考察</span>
+                <span className="flex-1 text-[12px] text-neutral">{t('report.notExamined')}</span>
               )}
             </div>
           ))}
@@ -146,7 +161,7 @@ export function Report() {
       {/* 优势 / 劣势 */}
       <section className="grid grid-cols-2 gap-6">
         <div className="bg-surface border border-border rounded-card p-6 shadow-card">
-          <h2 className="font-medium mb-3 text-success">优势</h2>
+          <h2 className="font-medium mb-3 text-success">{t('report.strength')}</h2>
           <ul className="space-y-2">
             {report.strengths.map((s, i) => (
               <li key={i} className="text-[14px] leading-relaxed">
@@ -156,7 +171,7 @@ export function Report() {
           </ul>
         </div>
         <div className="bg-surface border border-border rounded-card p-6 shadow-card">
-          <h2 className="font-medium mb-3 text-danger">待提升</h2>
+          <h2 className="font-medium mb-3 text-danger">{t('report.weakness')}</h2>
           <ul className="space-y-2">
             {report.weaknesses.map((w, i) => (
               <li key={i} className="text-[14px] leading-relaxed">
@@ -169,7 +184,7 @@ export function Report() {
 
       {/* 提升建议 */}
       <section className="bg-surface border border-border rounded-card p-6 shadow-card">
-        <h2 className="font-medium mb-3">提升建议</h2>
+        <h2 className="font-medium mb-3">{t('report.suggestion')}</h2>
         <ol className="space-y-2 list-decimal list-inside">
           {report.suggestions.map((s) => (
             <li key={s} className="text-[14px] leading-relaxed">
@@ -181,23 +196,22 @@ export function Report() {
 
       {/* STAR 分析 */}
       <section className="bg-surface border border-border rounded-card p-6 shadow-card">
-        <h2 className="font-medium mb-4">STAR 项目分析</h2>
+        <h2 className="font-medium mb-4">{t('report.star')}</h2>
         <div className="grid grid-cols-2 gap-4">
-          <StarCell label="情境 Situation" text={report.star.situation} />
-          <StarCell label="任务 Task" text={report.star.task} />
-          <StarCell label="行动 Action" text={report.star.action} />
-          <StarCell label="结果 Result" text={report.star.result} />
+          <StarCell label={t('report.situation')} text={report.star.situation} />
+          <StarCell label={t('report.task')} text={report.star.task} />
+          <StarCell label={t('report.action')} text={report.star.action} />
+          <StarCell label={t('report.result')} text={report.star.result} />
         </div>
       </section>
 
       {/* 通用软素质 */}
       <section className="grid grid-cols-3 gap-6">
         {report.soft_skills.map((s) => (
-          <div
-            key={s.name}
-            className="bg-surface border border-border rounded-card p-5 shadow-card"
-          >
-            <div className="text-sm text-muted-foreground mb-2">{s.name}</div>
+          <div key={s.name} className="bg-surface border border-border rounded-card p-5 shadow-card">
+            <div className="text-sm text-muted-foreground mb-2">
+              {t(SOFT_SKILL_KEYS[s.name] ?? s.name)}
+            </div>
             <div className="flex items-baseline gap-2">
               <span className="font-display text-2xl font-semibold text-primary">{s.score}</span>
               <span className="text-[12px] text-muted-foreground">/ 5</span>

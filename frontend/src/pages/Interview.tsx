@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { apiPost, streamSSE } from '../api/client'
 import type { Evidence, InterviewStart } from '../api/types'
 import { useInterview } from '../store/InterviewContext'
@@ -10,6 +11,25 @@ interface Message {
   role: 'interviewer' | 'candidate'
   gesture?: string
   segments: Segment[]
+}
+
+interface SpeechRecognitionLike {
+  lang: string
+  onresult: ((event: SpeechResultEvent) => void) | null
+  onend: (() => void) | null
+  start: () => void
+}
+
+interface SpeechResultEvent {
+  results: { [index: number]: { [index: number]: { transcript: string } } }
+}
+
+function getSpeechRecognition(): (new () => SpeechRecognitionLike) | null {
+  const w = window as unknown as {
+    SpeechRecognition?: new () => SpeechRecognitionLike
+    webkitSpeechRecognition?: new () => SpeechRecognitionLike
+  }
+  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null
 }
 
 /** 解析追问原文：识别开头的肢体语言描写（…）作为 gesture。 */
@@ -25,7 +45,18 @@ function parseFollowup(text: string): Message {
   return { role: 'interviewer', segments: [{ type: 'text', text }] }
 }
 
-function MessageBubble({ message }: { message: Message }) {
+function messageText(message: Message): string {
+  return message.segments.map((s) => s.text).join('')
+}
+
+function MessageBubble({
+  message,
+  onPlay,
+}: {
+  message: Message
+  onPlay?: (text: string) => void
+}) {
+  const { t } = useTranslation()
   const isInterviewer = message.role === 'interviewer'
   return (
     <div className={`flex ${isInterviewer ? 'justify-start' : 'justify-end'}`}>
@@ -51,22 +82,32 @@ function MessageBubble({ message }: { message: Message }) {
             ),
           )}
         </div>
+        {isInterviewer && onPlay && (
+          <button
+            onClick={() => onPlay(messageText(message))}
+            className="mt-2 text-[12px] text-muted-foreground hover:text-primary transition"
+            title={t('interview.play')}
+          >
+            🔊 {t('interview.play')}
+          </button>
+        )}
       </div>
     </div>
   )
 }
 
 function EvidencePanel({ evidence }: { evidence: Evidence[] }) {
+  const { t } = useTranslation()
   return (
     <aside className="bg-surface border border-border rounded-card shadow-card p-5">
       <div className="mb-1">
-        <h2 className="font-medium text-[15px]">能力证据 · 实时累积</h2>
-        <p className="text-[12px] text-muted-foreground">已覆盖 {evidence.length} 条证据</p>
+        <h2 className="font-medium text-[15px]">{t('interview.evidenceTitle')}</h2>
+        <p className="text-[12px] text-muted-foreground">
+          {t('interview.evidenceCount', { count: evidence.length })}
+        </p>
       </div>
       {evidence.length === 0 ? (
-        <p className="text-[13px] text-muted-foreground mt-4">
-          面试开始后，能力证据会在此实时累积。
-        </p>
+        <p className="text-[13px] text-muted-foreground mt-4">{t('interview.evidenceEmpty')}</p>
       ) : (
         <div className="mt-3 space-y-3">
           {evidence.map((e, i) => (
@@ -95,6 +136,7 @@ function EvidencePanel({ evidence }: { evidence: Evidence[] }) {
 
 export function Interview() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const { state, addEvidence, resetEvidence } = useInterview()
   const [sessionId, setSessionId] = useState('')
   const [messages, setMessages] = useState<Message[]>([])
@@ -102,6 +144,7 @@ export function Interview() {
   const [thinking, setThinking] = useState(false)
   const [input, setInput] = useState('')
   const [closed, setClosed] = useState(false)
+  const [listening, setListening] = useState(false)
 
   useEffect(() => {
     resetEvidence()
@@ -117,7 +160,10 @@ export function Interview() {
       })
       .catch((e) =>
         setMessages([
-          { role: 'interviewer', segments: [{ type: 'text', text: `面试启动失败：${e}` }] },
+          {
+            role: 'interviewer',
+            segments: [{ type: 'text', text: t('interview.startFailed', { error: String(e) }) }],
+          },
         ]),
       )
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -148,13 +194,47 @@ export function Interview() {
         }
       })
     } catch (e) {
-      full = `（系统提示：${e}）`
+      full = `（${String(e)}）`
     }
 
     if (full) setMessages((prev) => [...prev, parseFollowup(full)])
     setStreamText('')
     setThinking(false)
     if (isClosed) setClosed(true)
+  }
+
+  const playTTS = async (text: string) => {
+    try {
+      const res = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      })
+      if (!res.ok) return
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const audio = new Audio(url)
+      await audio.play()
+    } catch {
+      // 语音播报失败不阻断主链路
+    }
+  }
+
+  const startASR = () => {
+    const Recognition = getSpeechRecognition()
+    if (!Recognition) {
+      window.alert(t('interview.voiceInput'))
+      return
+    }
+    const recognition = new Recognition()
+    recognition.lang = 'zh-CN'
+    recognition.onresult = (event) => {
+      const transcript = event.results[0]?.[0]?.transcript ?? ''
+      setInput((prev) => (prev ? `${prev}${transcript}` : transcript))
+    }
+    recognition.onend = () => setListening(false)
+    setListening(true)
+    recognition.start()
   }
 
   return (
@@ -165,7 +245,7 @@ export function Interview() {
           <div className="bg-surface border border-border rounded-card shadow-card p-5">
             <div className="space-y-4 min-h-[400px]">
               {messages.map((m, i) => (
-                <MessageBubble key={i} message={m} />
+                <MessageBubble key={i} message={m} onPlay={playTTS} />
               ))}
               {streamText && (
                 <div className="flex justify-start">
@@ -183,7 +263,9 @@ export function Interview() {
                     <span className="thinking-dot">●</span>
                     <span className="thinking-dot ml-1">●</span>
                     <span className="thinking-dot ml-1">●</span>
-                    <span className="text-[12px] text-muted-foreground ml-2">正在思考…</span>
+                    <span className="text-[12px] text-muted-foreground ml-2">
+                      {t('interview.thinking')}
+                    </span>
                   </div>
                 </div>
               )}
@@ -197,15 +279,26 @@ export function Interview() {
                 onClick={() => navigate('/report')}
                 className="w-full h-11 rounded-lg text-sm font-medium bg-accent text-white hover:opacity-90 transition"
               >
-                面试结束，查看评估报告 →
+                {t('interview.finish')}
               </button>
             ) : (
               <>
+                <button
+                  onClick={startASR}
+                  className={`h-11 px-3 rounded-lg border text-sm transition ${
+                    listening
+                      ? 'bg-danger-bg border-danger text-danger'
+                      : 'bg-surface border-border text-muted-foreground hover:text-primary'
+                  }`}
+                  title={t('interview.voiceInput')}
+                >
+                  {listening ? `● ${t('interview.listening')}` : '🎤'}
+                </button>
                 <input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                  placeholder="输入你的回答…"
+                  placeholder={t('interview.placeholder')}
                   className="flex-1 h-11 rounded-lg border border-border bg-surface px-4 text-[15px] focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
                 />
                 <button
@@ -213,7 +306,7 @@ export function Interview() {
                   disabled={!input.trim() || thinking}
                   className="h-11 px-6 rounded-lg text-sm font-medium bg-primary text-white hover:bg-primary-hover disabled:opacity-40 disabled:cursor-not-allowed transition"
                 >
-                  发送
+                  {t('interview.send')}
                 </button>
               </>
             )}

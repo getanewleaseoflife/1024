@@ -1,4 +1,9 @@
+import { useTranslation } from 'react-i18next'
+
 export function Header() {
+  const { t, i18n } = useTranslation()
+  const isZh = i18n.language.startsWith('zh')
+
   return (
     <header className="sticky top-0 z-40 bg-surface/90 backdrop-blur border-b border-border">
       <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
@@ -20,16 +25,23 @@ export function Header() {
           </div>
           <div>
             <div className="font-display font-semibold text-[15px] leading-tight">
-              岗位胜任力评估智能体
+              {t('header.title')}
             </div>
             <div className="text-[11px] text-muted-foreground leading-tight">
-              AI 面试官 · 模拟面试 + 胜任力评估报告
+              {t('header.subtitle')}
             </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => i18n.changeLanguage(isZh ? 'en' : 'zh-CN')}
+            className="h-7 px-2.5 rounded-md border border-border text-[12px] font-medium text-muted-foreground hover:text-primary hover:border-primary transition"
+            title="Switch language"
+          >
+            {isZh ? 'EN' : '中文'}
+          </button>
           <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-success px-2.5 py-1 rounded-full bg-success-bg">
-            <span className="w-1.5 h-1.5 rounded-full bg-success"></span> 就绪
+            <span className="w-1.5 h-1.5 rounded-full bg-success"></span> {t('header.ready')}
           </span>
         </div>
       </div>

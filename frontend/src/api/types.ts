@@ -60,3 +60,11 @@ export interface Report {
   star: { situation: string; task: string; action: string; result: string }
   soft_skills: { name: string; score: number }[]
 }
+
+export interface HistoryItem {
+  id: number
+  position_name: string
+  persona_id: string
+  match_score: number
+  created_at: string
+}

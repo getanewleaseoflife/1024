@@ -1,0 +1,104 @@
+{
+  "header": {
+    "title": "Job Competency Assessment Agent",
+    "subtitle": "AI Interviewer · Mock Interview + Competency Report",
+    "ready": "Ready"
+  },
+  "stepper": {
+    "position": "Position",
+    "resume": "Resume",
+    "profile": "Profile",
+    "interview": "Interview",
+    "report": "Report"
+  },
+  "position": {
+    "title": "Select Target Position",
+    "desc": "Choose a position; the AI interviewer will conduct multi-round interviews and competency assessment based on its competency model.",
+    "available": "Available",
+    "pending": "Coming Soon",
+    "start": "Start Interview",
+    "soon": "Coming Soon",
+    "loading": "Loading positions…"
+  },
+  "resume": {
+    "title": "Resume Input",
+    "desc": "Paste your resume; the system will extract skill tags and build a candidate profile (target: {{position}}).",
+    "label": "Resume Text",
+    "placeholder": "Paste your resume here: education, skills, projects, internships, certificates…",
+    "privacy": "Resume content is used only for this session; not uploaded or persisted.",
+    "parse": "Parse Resume",
+    "parsing": "Parsing…",
+    "uploadPdf": "Upload PDF"
+  },
+  "profile": {
+    "title": "Candidate Profile",
+    "desc": "Skill tags and Gap analysis for the \"{{position}}\" position.",
+    "basicInfo": "Basic Information",
+    "unnamed": "Unnamed Candidate",
+    "eduEmpty": "Education not provided",
+    "gapTitle": "Position Gap Analysis",
+    "have": "Has",
+    "waiting": "To Assess",
+    "missing": "Missing",
+    "gapEmpty": "No Gap data yet. Please parse your resume on the previous page.",
+    "personaTitle": "Select Interviewer Persona",
+    "fastMode": "Fast demo mode (only 3 dimensions)",
+    "start": "Start Interview"
+  },
+  "persona": {
+    "friendly": "Friendly",
+    "friendlyDesc": "Peer engineer · Encouraging",
+    "rigorous": "Rigorous",
+    "rigorousDesc": "Senior expert · Sharp & professional",
+    "stress": "Stress",
+    "stressDesc": "HR manager · Pressuring"
+  },
+  "interview": {
+    "evidenceTitle": "Ability Evidence · Live",
+    "evidenceCount": "{{count}} evidence collected",
+    "evidenceEmpty": "Evidence will accumulate here once the interview starts.",
+    "placeholder": "Type your answer…",
+    "send": "Send",
+    "thinking": "Thinking…",
+    "play": "Play",
+    "voiceInput": "Voice input",
+    "listening": "Listening",
+    "finish": "Interview finished, view report →",
+    "startFailed": "Failed to start interview: {{error}}"
+  },
+  "report": {
+    "title": "Assessment Report",
+    "desc": "Objective competency assessment and improvement suggestions from this interview.",
+    "match": "Overall Match",
+    "radar": "Ability Radar",
+    "dimension": "Dimension",
+    "score": "Score",
+    "notExamined": "Not Assessed",
+    "dimensionScore": "Dimension Scores",
+    "strength": "Strengths",
+    "weakness": "To Improve",
+    "suggestion": "Suggestions",
+    "star": "STAR Analysis",
+    "situation": "Situation",
+    "task": "Task",
+    "action": "Action",
+    "result": "Result",
+    "communication": "Communication",
+    "logic": "Logical Thinking",
+    "adaptability": "Adaptability",
+    "generating": "Generating report…",
+    "failed": "Unable to generate report. Please complete the interview first."
+  },
+  "matchLevel": {
+    "excellent": "Excellent",
+    "good": "Good",
+    "improve": "Improving",
+    "weak": "Needs Work"
+  },
+  "history": {
+    "title": "My Interview History",
+    "empty": "No history yet",
+    "match": "Match",
+    "view": "View"
+  }
+}

@@ -1,22 +1,24 @@
 import { Fragment } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
-export interface Step {
+interface Step {
   path: string
-  label: string
+  labelKey: string
 }
 
 const STEPS: Step[] = [
-  { path: '/position', label: '岗位选择' },
-  { path: '/resume', label: '简历输入' },
-  { path: '/profile', label: '能力画像' },
-  { path: '/interview', label: '模拟面试' },
-  { path: '/report', label: '评估报告' },
+  { path: '/position', labelKey: 'stepper.position' },
+  { path: '/resume', labelKey: 'stepper.resume' },
+  { path: '/profile', labelKey: 'stepper.profile' },
+  { path: '/interview', labelKey: 'stepper.interview' },
+  { path: '/report', labelKey: 'stepper.report' },
 ]
 
 export function Stepper() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { t } = useTranslation()
   const currentIndex = STEPS.findIndex((s) => s.path === location.pathname)
 
   return (
@@ -52,7 +54,7 @@ export function Stepper() {
                           : 'text-muted-foreground group-hover:text-foreground'
                     }`}
                   >
-                    {step.label}
+                    {t(step.labelKey)}
                   </span>
                 </li>
                 {i < STEPS.length - 1 && (

@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { apiPost } from '../api/client'
 import type { ResumeParseResult } from '../api/types'
 import { useInterview } from '../store/InterviewContext'
 
 export function ResumeInput() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const { state, setResume } = useInterview()
   const [text, setText] = useState('')
   const [parsing, setParsing] = useState(false)
@@ -29,25 +31,46 @@ export function ResumeInput() {
     }
   }
 
+  const handlePdfUpload = async (file: File) => {
+    setParsing(true)
+    setError('')
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await fetch(`/api/resume/parse_pdf?position_id=${state.positionId}`, {
+        method: 'POST',
+        body: formData,
+      })
+      if (!res.ok) throw new Error(`上传失败: ${res.status}`)
+      const result = (await res.json()) as ResumeParseResult
+      setResume('', result.profile, result.gaps)
+      navigate('/profile')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'PDF 解析失败，请重试')
+    } finally {
+      setParsing(false)
+    }
+  }
+
   return (
     <main className="max-w-3xl mx-auto px-5 py-10">
       <div className="mb-8">
-        <h1 className="font-display text-2xl font-semibold">简历输入</h1>
+        <h1 className="font-display text-2xl font-semibold">{t('resume.title')}</h1>
         <p className="text-muted-foreground mt-2">
-          粘贴简历文本，系统将提取能力标签并构建候选人画像（目标岗位：{state.positionName}）。
+          {t('resume.desc', { position: state.positionName })}
         </p>
       </div>
 
       <div className="bg-surface border border-border rounded-card p-6 shadow-card">
         <label htmlFor="resume" className="block text-sm font-medium mb-2">
-          简历文本
+          {t('resume.label')}
         </label>
         <textarea
           id="resume"
           value={text}
           onChange={(e) => setText(e.target.value)}
           rows={14}
-          placeholder="在此粘贴简历文本，例如：教育背景、技能栈、项目经历、实习经历、证书奖项…"
+          placeholder={t('resume.placeholder')}
           className="w-full rounded-lg border border-border bg-surface px-4 py-3 text-[15px] leading-relaxed focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary resize-y"
         />
         <p className="text-[12px] text-muted-foreground mt-2 flex items-center gap-1.5">
@@ -64,7 +87,7 @@ export function ResumeInput() {
               d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
             />
           </svg>
-          简历原文仅本次会话内使用，不上传、不落盘
+          {t('resume.privacy')}
         </p>
 
         {error && <p className="text-[13px] text-destructive mt-2">{error}</p>}
@@ -75,9 +98,20 @@ export function ResumeInput() {
             disabled={!text.trim() || parsing}
             className="h-10 px-6 rounded-lg text-sm font-medium bg-primary text-white hover:bg-primary-hover disabled:opacity-40 disabled:cursor-not-allowed transition"
           >
-            {parsing ? '解析中…' : '解析简历'}
+            {parsing ? t('resume.parsing') : t('resume.parse')}
           </button>
-          <span className="text-[12px] text-muted-foreground">PDF 上传（增强项，后续支持）</span>
+          <label className="h-10 px-4 rounded-lg border border-border bg-surface text-sm font-medium text-foreground cursor-pointer hover:border-muted-foreground/40 transition flex items-center">
+            {t('resume.uploadPdf')}
+            <input
+              type="file"
+              accept=".pdf"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) handlePdfUpload(file)
+              }}
+            />
+          </label>
         </div>
       </div>
     </main>
