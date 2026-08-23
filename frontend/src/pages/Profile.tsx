@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useInterview } from '../store/InterviewContext'
+import { compressImage } from '../utils/image'
 
 interface Persona {
   id: string
@@ -48,13 +49,26 @@ const GAP_STYLE = {
 export function Profile() {
   const navigate = useNavigate()
   const { t } = useTranslation()
-  const { state, setPersona, setFastMode } = useInterview()
+  const { state, setPersona, setFastMode, setAvatar } = useInterview()
   const [persona, setPersonaLocal] = useState(state.personaId)
-  const { profile, gaps } = state
+  const { profile, gaps, avatar } = state
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleSelectPersona = (id: string) => {
     setPersonaLocal(id)
     setPersona(id)
+  }
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    try {
+      const base64 = await compressImage(file)
+      setAvatar(base64)
+    } catch {
+      // 压缩失败忽略，保留原头像
+    }
+    e.target.value = ''
   }
 
   return (
@@ -70,9 +84,27 @@ export function Profile() {
       <section className="bg-surface border border-border rounded-card p-6 shadow-card mb-6">
         <h2 className="text-sm font-medium text-muted-foreground mb-3">{t('profile.basicInfo')}</h2>
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-primary-soft text-primary grid place-items-center font-display font-semibold text-lg">
-            {profile?.name?.charAt(0) || '?'}
-          </div>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="relative w-16 h-16 rounded-full overflow-hidden bg-primary-soft text-primary grid place-items-center font-display font-semibold text-2xl shrink-0 cursor-pointer group"
+            title={t('profile.avatar')}
+          >
+            {avatar ? (
+              <img src={avatar} alt="avatar" className="w-full h-full object-cover" />
+            ) : (
+              profile?.name?.charAt(0) || '?'
+            )}
+            <span className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 text-white text-[11px] flex items-center justify-center transition">
+              {t('profile.upload')}
+            </span>
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleAvatarChange}
+          />
           <div>
             <div className="font-medium">{profile?.name || t('profile.unnamed')}</div>
             <div className="text-sm text-muted-foreground">
@@ -164,9 +196,10 @@ export function Profile() {
 
       <button
         onClick={() => navigate('/interview')}
-        className="w-full h-12 rounded-lg text-sm font-medium bg-primary text-white hover:bg-primary-hover transition"
+        disabled={!avatar}
+        className="w-full h-12 rounded-lg text-sm font-medium bg-primary text-white hover:bg-primary-hover disabled:opacity-40 disabled:cursor-not-allowed transition"
       >
-        {t('profile.start')}
+        {avatar ? t('profile.start') : t('profile.avatarRequired')}
       </button>
     </main>
   )

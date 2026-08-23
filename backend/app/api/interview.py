@@ -19,6 +19,7 @@ class StartRequest(BaseModel):
     persona_id: str = "rigorous"
     resume_text: str = ""
     fast_mode: bool = False
+    gaps: list[dict] = []
 
 
 class AnswerRequest(BaseModel):
@@ -28,7 +29,7 @@ class AnswerRequest(BaseModel):
 
 @router.post("/interview/start")
 def start(req: StartRequest) -> dict:
-    orch = InterviewOrchestrator(req.position_id, req.persona_id, req.resume_text, req.fast_mode)
+    orch = InterviewOrchestrator(req.position_id, req.persona_id, req.resume_text, req.fast_mode, req.gaps)
     sid = uuid4().hex
     _SESSIONS[sid] = orch
     return {

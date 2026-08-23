@@ -28,7 +28,7 @@ export function Stepper() {
     true, // 岗位选择：始终可进
     state.positionId !== '', // 简历输入：已选岗位
     state.profile !== null, // 能力画像：简历已解析
-    state.profile !== null, // 模拟面试：画像已生成
+    state.profile !== null && state.avatar !== '', // 模拟面试：画像 + 大头照
     state.interviewDone, // 评估报告：面试完全结束
   ]
 

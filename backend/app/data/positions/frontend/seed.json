@@ -14,6 +14,14 @@
         {
           "q": "什么是 BFC？它解决了哪些问题？",
           "answer_points": ["块级格式化上下文", "触发条件", "外边距塌陷", "清除浮动", "两栏自适应"]
+        },
+        {
+          "q": "盒模型有哪几种？box-sizing 有什么区别？",
+          "answer_points": ["content-box", "border-box", "content/padding/border/margin", "默认行为", "布局影响"]
+        },
+        {
+          "q": "移动端响应式布局你会怎么做？",
+          "answer_points": ["媒体查询", "rem/vw 单位", "flex/grid", "流式布局", "断点设计", "移动优先"]
         }
       ],
       "rubric": [
@@ -33,6 +41,14 @@
         {
           "q": "事件循环（Event Loop）是怎么工作的？宏任务和微任务的区别？",
           "answer_points": ["调用栈", "宏任务队列", "微任务队列", "执行顺序", "Promise/setTimeout 差异"]
+        },
+        {
+          "q": "原型和原型链是什么？继承是怎么实现的？",
+          "answer_points": ["prototype", "__proto__", "原型链查找", "构造函数", "ES6 class", "instanceof 原理"]
+        },
+        {
+          "q": "防抖和节流有什么区别？分别用在什么场景？",
+          "answer_points": ["防抖延迟执行", "节流固定频率", "输入搜索 vs 滚动", "闭包实现", "定时器"]
         }
       ],
       "rubric": [
@@ -52,6 +68,14 @@
         {
           "q": "组件间通信有哪些方式？各自适用什么场景？",
           "answer_points": ["props", "context", "状态管理库", "事件总线", "父传子/子传父/跨层级"]
+        },
+        {
+          "q": "React Hooks 解决了什么问题？useEffect 的依赖数组怎么理解？",
+          "answer_points": ["函数组件状态", "副作用管理", "依赖触发", "闭包陷阱", "自定义 Hook"]
+        },
+        {
+          "q": "你会如何设计一个应用的状态管理？什么时候该上全局状态？",
+          "answer_points": ["局部状态 vs 全局状态", "Context", "Redux/Zustand", "状态提升", "避免过度设计"]
         }
       ],
       "rubric": [
@@ -67,6 +91,18 @@
         {
           "q": "Webpack 的打包流程是怎样的？loader 和 plugin 有什么区别？",
           "answer_points": ["入口/依赖图/打包输出", "loader 转换文件", "plugin 扩展构建", "热更新", "代码分割"]
+        },
+        {
+          "q": "Vite 相比 Webpack 为什么快？",
+          "answer_points": ["原生 ESM", "按需编译", "esbuild 预构建", "冷启动快", "HMR 快", "生产用 Rollup"]
+        },
+        {
+          "q": "代码分割怎么做？为什么需要它？",
+          "answer_points": ["动态 import", "按路由分割", "减少首屏体积", "缓存优化", "公共 chunk 提取"]
+        },
+        {
+          "q": "CommonJS 和 ES Module 有什么区别？",
+          "answer_points": ["运行时 vs 编译时", "同步 vs 异步", "值拷贝 vs 引用", "tree-shaking 支持", "互操作性"]
         }
       ],
       "rubric": [
@@ -82,6 +118,18 @@
         {
           "q": "一个页面首屏加载很慢，你会从哪些方面排查和优化？",
           "answer_points": ["资源体积与压缩", "懒加载/按需加载", "缓存策略", "CDN", "图片优化", "减少重绘重排", "性能监控"]
+        },
+        {
+          "q": "什么是重绘和重排？如何减少？",
+          "answer_points": ["重排改变布局", "重绘只改外观", "批量 DOM 操作", "transform 代替位移", "documentFragment", "避免频繁读写"]
+        },
+        {
+          "q": "图片优化有哪些手段？",
+          "answer_points": ["格式选择 WebP", "懒加载", "响应式图片", "压缩", "CDN", "雪碧图/图标字体"]
+        },
+        {
+          "q": "浏览器缓存有哪些类型？如何设计缓存策略？",
+          "answer_points": ["强缓存", "协商缓存", "Cache-Control", "ETag/Last-Modified", "hash 文件名", "按资源类型设策略"]
         }
       ],
       "rubric": [
@@ -97,6 +145,18 @@
         {
           "q": "讲一个你最有代表性的前端项目，遇到的最大技术挑战是什么？",
           "answer_points": ["项目背景", "个人职责", "具体难点", "解决思路", "可量化结果"]
+        },
+        {
+          "q": "你遇到过哪些浏览器兼容性问题？怎么解决？",
+          "answer_points": ["CSS 前缀", "JS API 差异", "polyfill", "babel 转译", "渐进增强", "兼容测试"]
+        },
+        {
+          "q": "线上出现一个前端 bug，你的排查思路是什么？",
+          "answer_points": ["复现", "看报错堆栈", "日志与监控", "二分定位", "网络/数据层排查", "修复与回归"]
+        },
+        {
+          "q": "你如何保证前端代码质量？做过哪些重构？",
+          "answer_points": ["代码规范", "ESLint/Prettier", "组件复用", "类型系统", "单元测试", "重构原则"]
         }
       ],
       "rubric": [

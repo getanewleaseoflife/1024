@@ -43,6 +43,9 @@
     "gapEmpty": "No Gap data yet. Please parse your resume on the previous page.",
     "personaTitle": "Select Interviewer Persona",
     "fastMode": "Fast demo mode (only 3 dimensions)",
+    "avatar": "Upload photo",
+    "upload": "Upload",
+    "avatarRequired": "Please upload your photo first",
     "start": "Start Interview"
   },
   "persona": {

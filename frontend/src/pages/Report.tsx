@@ -77,6 +77,16 @@ export function Report() {
         <p className="text-muted-foreground mt-2">{t('report.desc')}</p>
       </div>
 
+      {state.avatar && (
+        <section className="flex items-center gap-4 bg-surface border border-border rounded-card p-5 shadow-card">
+          <img src={state.avatar} alt="candidate" className="w-12 h-12 rounded-full object-cover" />
+          <div>
+            <div className="font-medium">{state.profile?.name || t('profile.unnamed')}</div>
+            <div className="text-sm text-muted-foreground">{report.position_name}</div>
+          </div>
+        </section>
+      )}
+
       {/* 综合匹配度 */}
       <section className="bg-surface border border-border rounded-card p-6 shadow-card flex items-center justify-between">
         <div>

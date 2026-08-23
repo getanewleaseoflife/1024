@@ -153,6 +153,7 @@ export function Interview() {
       persona_id: state.personaId,
       resume_text: state.resumeText,
       fast_mode: state.fastMode,
+      gaps: state.gaps,
     })
       .then((res) => {
         setSessionId(res.session_id)
@@ -244,6 +245,21 @@ export function Interview() {
         {/* 对话主区 */}
         <section className="col-span-2 flex flex-col">
           <div className="bg-surface border border-border rounded-card shadow-card p-5">
+            {state.avatar && (
+              <div className="flex items-center gap-3 mb-4 pb-4 border-b border-border">
+                <img
+                  src={state.avatar}
+                  alt="candidate"
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+                <div>
+                  <div className="text-sm font-medium">
+                    {state.profile?.name || t('profile.unnamed')}
+                  </div>
+                  <div className="text-[12px] text-muted-foreground">{state.positionName}</div>
+                </div>
+              </div>
+            )}
             <div className="space-y-4 min-h-[400px]">
               {messages.map((m, i) => (
                 <MessageBubble key={i} message={m} onPlay={playTTS} />

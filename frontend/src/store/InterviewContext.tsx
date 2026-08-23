@@ -11,6 +11,7 @@ interface InterviewState {
   evidence: Evidence[]
   fastMode: boolean
   interviewDone: boolean
+  avatar: string
 }
 
 interface InterviewContextValue {
@@ -22,6 +23,7 @@ interface InterviewContextValue {
   resetEvidence: () => void
   setFastMode: (fastMode: boolean) => void
   setInterviewDone: (done: boolean) => void
+  setAvatar: (avatar: string) => void
 }
 
 // positionId 初始为空：岗位必须由用户主动选择，无默认值
@@ -35,6 +37,7 @@ const defaultState: InterviewState = {
   evidence: [],
   fastMode: false,
   interviewDone: false,
+  avatar: '',
 }
 
 const InterviewContext = createContext<InterviewContextValue | null>(null)
@@ -74,6 +77,7 @@ export function InterviewProvider({ children }: { children: ReactNode }) {
       resetEvidence: () => setState((s) => ({ ...s, evidence: [] })),
       setFastMode: (fastMode) => setState((s) => ({ ...s, fastMode })),
       setInterviewDone: (done) => setState((s) => ({ ...s, interviewDone: done })),
+      setAvatar: (avatar) => setState((s) => ({ ...s, avatar })),
     }),
     [state],
   )

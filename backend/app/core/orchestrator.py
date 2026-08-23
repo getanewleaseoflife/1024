@@ -1,6 +1,7 @@
 """面试编排器：状态机推进 + 硬护栏（追问上限 / 换题 / 降级结束）。"""
 
 import json
+import random
 from collections.abc import Iterator
 from pathlib import Path
 from uuid import uuid4
@@ -24,7 +25,14 @@ def _load_seed(position_id: str) -> dict:
 
 
 class InterviewOrchestrator:
-    def __init__(self, position_id: str, persona_id: str, resume_text: str = "", fast_mode: bool = False):
+    def __init__(
+        self,
+        position_id: str,
+        persona_id: str,
+        resume_text: str = "",
+        fast_mode: bool = False,
+        gaps: list[dict] | None = None,
+    ):
         seed = _load_seed(position_id)
         ensure_seed(position_id)
         self.position_id = position_id
@@ -32,8 +40,12 @@ class InterviewOrchestrator:
         self.persona_id = persona_id
         self.resume_text = resume_text
         self.dimensions = [d["name"] for d in seed["dimensions"]]
+        # 基于简历 Gap 排序维度：待考察（pending）优先问，已具备（have）靠后
+        if gaps:
+            gap_map = {g["dimension"]: g["status"] for g in gaps}
+            self.dimensions.sort(key=lambda d: 0 if gap_map.get(d) == "pending" else 1)
         if fast_mode:
-            self.dimensions = self.dimensions[:3]  # 快速演示模式：只面试 3 个维度
+            self.dimensions = self.dimensions[:3]  # 快速演示模式：只面试前 3 个维度
         self._dim_data = {d["name"]: d for d in seed["dimensions"]}
         self.memory = MemoryStore(uuid4().hex)
         self.state = "opening"
@@ -47,7 +59,7 @@ class InterviewOrchestrator:
     def _current_question(self) -> str:
         d = self._dim_data[self.current_dimension or self.dimensions[0]]
         if d.get("questions"):
-            return d["questions"][0]["q"]
+            return random.choice(d["questions"])["q"]
         return f"请谈谈你对「{self.current_dimension}」的理解。"
 
     def opening(self) -> str:

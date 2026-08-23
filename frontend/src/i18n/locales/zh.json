@@ -43,6 +43,9 @@
     "gapEmpty": "暂无 Gap 数据，请先在简历输入页解析简历。",
     "personaTitle": "选择面试官人格",
     "fastMode": "快速演示模式（只面试 3 个维度）",
+    "avatar": "上传大头照",
+    "upload": "上传",
+    "avatarRequired": "请先上传大头照",
     "start": "开始面试"
   },
   "persona": {
