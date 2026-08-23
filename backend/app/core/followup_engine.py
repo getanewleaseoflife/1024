@@ -1,6 +1,6 @@
 """追问引擎：每轮两次调用 —— ① 非流式分类器（action + evidence）② 流式追问原文。
 
-分类器输出结构化 action 落到状态机/L3 记忆；追问原文流式生成，兼顾「结构化决策可校验」与「打字机体验」。
+含拟人化：开场白 / 收尾语 / 换题过渡均 LLM 生成，追问按人格 + 情商差异化。
 """
 
 import json
@@ -85,11 +85,73 @@ def _parse_classify(raw: str, dimension: str) -> ClassifyResult:
         data = json.loads(raw)
     except json.JSONDecodeError:
         return ClassifyResult(action="next", reason="分类器输出异常，回退换题")
-    # 证据 quote 机械校验：必须是回答子串（容错：允许轻微空白差异）
     result = ClassifyResult(**data)
     if result.evidence and result.evidence.dimension == "":
         result.evidence.dimension = dimension
     return result
+
+
+def _persona_context(persona: dict) -> str:
+    return (
+        f"{persona['style']}\n"
+        f"你的措辞风格：{persona['tone']}\n"
+        f"可用的肢体语言描写（选一个用，形如括号内）：{' / '.join(persona['gestures'])}"
+    )
+
+
+def generate_opening(position: str, persona_id: str, first_question: str) -> str:
+    """生成开场白（寒暄 + 自我介绍 + 流程说明 + 引出第一题）。"""
+    persona = get_persona(persona_id)
+    prompt = (
+        f"{_persona_context(persona)}\n\n"
+        f"你正在面试 {position} 岗位的候选人。\n"
+        f"请生成自然的开场白，要求：\n"
+        f"1. 寒暄 + 自我介绍（符合你的人格语气）\n"
+        f"2. 简短说明本次面试会考察几个维度的能力\n"
+        f"3. 自然引出第一道题：{first_question}\n"
+        f"4. 可带一句肢体语言描写\n"
+        f"5. 只输出面试官说的话，2~3 句话即可"
+    )
+    return chat(
+        [{"role": "system", "content": _SYSTEM_RULE}, {"role": "user", "content": prompt}],
+        temperature=persona["temperature"],
+    )
+
+
+def generate_closing(position: str, persona_id: str) -> Iterator[str]:
+    """生成收尾语（总结 + 反问环节 + 道别）。"""
+    persona = get_persona(persona_id)
+    prompt = (
+        f"{_persona_context(persona)}\n\n"
+        f"你正在面试 {position} 岗位的候选人，面试即将结束。\n"
+        f"请生成自然的收尾语，要求：\n"
+        f"1. 用 1 句话简短总结本次面试\n"
+        f"2. 反问环节：「你有什么想问我的吗」\n"
+        f"3. 礼貌道别，说明接下来会生成能力评估报告\n"
+        f"4. 语气符合人格，只输出面试官说的话"
+    )
+    yield from chat_stream(
+        [{"role": "system", "content": _SYSTEM_RULE}, {"role": "user", "content": prompt}],
+        temperature=persona["temperature"],
+    )
+
+
+def generate_transition(position: str, persona_id: str, dimension: str, question: str) -> Iterator[str]:
+    """生成换题过渡语（自然衔接，非生硬「进入下一维度」）。"""
+    persona = get_persona(persona_id)
+    prompt = (
+        f"{_persona_context(persona)}\n\n"
+        f"你正在面试 {position} 岗位的候选人，接下来要进入「{dimension}」维度，"
+        f"问：{question}\n"
+        f"请生成一句自然的换题过渡语，要求：\n"
+        f"1. 承上启下、自然衔接（不要生硬说「进入下一维度」）\n"
+        f"2. 语气符合人格\n"
+        f"3. 只输出面试官说的话，含引出新题目"
+    )
+    yield from chat_stream(
+        [{"role": "system", "content": _SYSTEM_RULE}, {"role": "user", "content": prompt}],
+        temperature=persona["temperature"],
+    )
 
 
 def generate_followup(
@@ -99,17 +161,27 @@ def generate_followup(
     position: str,
     dimension: str,
     persona_id: str,
+    level: int = 0,
 ) -> Iterator[str]:
-    """调用②：流式生成追问原文（含人格语气 + 拟人化）。"""
+    """调用②：流式生成追问原文（人格语气 + 情商差异化 + 引用原话）。"""
     persona = get_persona(persona_id)
+    # 情商规则：按掌握度给不同情绪反应（人格差异化）
+    if level <= 1:
+        empathy = f"候选人掌握度偏低，你的情绪反应：{persona['empathy_low']}"
+    elif level >= 4:
+        empathy = f"候选人掌握度较高，你的情绪反应：{persona['empathy_high']}"
+    else:
+        empathy = ""
+
     prompt = (
-        f"{persona['style']}\n\n"
+        f"{_persona_context(persona)}\n\n"
         f"你正在面试 {position} 岗位，当前考察维度「{dimension}」。\n"
         f"候选人刚才的回答：\n<candidate_answer>\n{answer}\n</candidate_answer>\n\n"
+        f"{empathy}\n\n"
         f"你决定采取的动作是「{action}」，理由：{reason}\n"
         f"请生成一句自然的追问原文。要求：\n"
         f"1. 若为深挖/挑战，尽量引用候选人原话（用「」括住）\n"
-        f"2. 语气符合你的人格设定，可带一句肢体语言描写，形如（合上简历，身体前倾）\n"
+        f"2. 语气符合你的人格设定\n"
         f"3. 只输出面试官说的话，不要输出任何解释或标注"
     )
     yield from chat_stream(

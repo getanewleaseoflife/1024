@@ -2,11 +2,16 @@
 
 import json
 import random
-from collections.abc import Iterator
 from pathlib import Path
 from uuid import uuid4
 
-from app.core.followup_engine import classify, generate_followup
+from app.core.followup_engine import (
+    classify,
+    generate_closing,
+    generate_followup,
+    generate_opening,
+    generate_transition,
+)
 from app.core.memory import MemoryStore
 from app.core.rag import ensure_seed
 
@@ -64,10 +69,7 @@ class InterviewOrchestrator:
 
     def opening(self) -> str:
         self.current_dimension = self.dimensions[0]
-        return (
-            f"你好，欢迎参加本次「{self.position_name}」岗位面试。"
-            f"我们先从「{self.current_dimension}」开始：{self._current_question()}"
-        )
+        return generate_opening(self.position_name, self.persona_id, self._current_question())
 
     def answer(self, answer: str) -> dict:
         """处理一轮回答，返回 {action, evidence, followup_iter, closed}。"""
@@ -102,14 +104,17 @@ class InterviewOrchestrator:
             self._record(answer, action)
             if action == "close" or self.dim_index + 1 >= len(self.dimensions):
                 self.closed = True
-                followup_iter: Iterator[str] = iter(
-                    ["感谢你的时间，本次面试到此结束。接下来我会生成你的能力评估报告。"]
-                )
+                followup_iter = generate_closing(self.position_name, self.persona_id)
             else:
                 self.dim_index += 1
                 self.current_dimension = self.dimensions[self.dim_index]
                 self.followup_count = 0
-                followup_iter = iter([f"（进入下一维度）{self._current_question()}"])
+                followup_iter = generate_transition(
+                    self.position_name,
+                    self.persona_id,
+                    self.current_dimension or "",
+                    self._current_question(),
+                )
         else:
             self._record(answer, action)
             followup_iter = generate_followup(
@@ -119,6 +124,7 @@ class InterviewOrchestrator:
                 self.position_name,
                 self.current_dimension or "",
                 self.persona_id,
+                evidence.level if evidence else 0,
             )
 
         return {
