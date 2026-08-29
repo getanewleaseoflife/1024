@@ -17,10 +17,16 @@ _SCORE_PROMPT = """你是岗位胜任力评估专家。根据候选人的能力�
 请只输出 JSON（不要输出其他文字），格式：
 {{
   "scores": {{"维度名": 0到5的整数}},
+  "soft_skills": {{"沟通表达": 0到5的整数, "逻辑思维": 0到5的整数, "临场应变": 0到5的整数}},
   "strengths": ["优势1（基于证据）"],
   "weaknesses": ["劣势1（基于证据）"],
   "suggestions": ["具体可执行的提升建议1"]
 }}
+
+其中 soft_skills 是基于候选人整场面试的综合软素质，务必区分高下：
+- 沟通表达：回答的条理性与清晰度
+- 逻辑思维：回答的逻辑严谨性
+- 临场应变：对追问的反应与抗压
 """
 
 
@@ -49,11 +55,12 @@ def _llm_score(position: str, evidence_by_dim: dict[str, list[dict]], rule: dict
     try:
         data = json.loads(raw)
         scores = data.get("scores", {})
+        soft_skills = data.get("soft_skills", {})
         strengths = data.get("strengths", [])
         weaknesses = data.get("weaknesses", [])
         suggestions = data.get("suggestions", [])
     except (json.JSONDecodeError, AttributeError):
-        scores, strengths, weaknesses, suggestions = {}, [], [], []
+        scores, soft_skills, strengths, weaknesses, suggestions = {}, {}, [], [], []
 
     # ±1 封顶
     clamped = {}
@@ -68,6 +75,7 @@ def _llm_score(position: str, evidence_by_dim: dict[str, list[dict]], rule: dict
         )
     return {
         "scores": clamped,
+        "soft_skills": soft_skills,
         "strengths": strengths,
         "weaknesses": weaknesses,
         "suggestions": suggestions,
@@ -103,6 +111,7 @@ def score(evidence_list: list[dict], position: str, dimensions: list[str]) -> di
         "final_scores": final,
         "rule_scores": rule,
         "llm_scores": llm["scores"],
+        "soft_skills": llm["soft_skills"],
         "strengths": llm["strengths"],
         "weaknesses": llm["weaknesses"],
         "suggestions": llm["suggestions"],

@@ -54,8 +54,7 @@ def generate_report(position_id: str, evidence_list: list[dict], dialogues: list
         "suggestions": scored["suggestions"],
         "star": star,
         "soft_skills": [
-            {"name": "沟通表达", "score": 3},
-            {"name": "逻辑思维", "score": 3},
-            {"name": "临场应变", "score": 3},
+            {"name": name, "score": scored.get("soft_skills", {}).get(name, 1)}
+            for name in ["沟通表达", "逻辑思维", "临场应变"]
         ],
     }

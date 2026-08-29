@@ -57,9 +57,9 @@ def _match_gap(profile: ResumeProfile, keywords: dict[str, list[str]]) -> list[G
 
     gaps: list[GapItem] = []
     for dimension, kws in keywords.items():
-        hit = any(kw.lower() in haystack for kw in kws)
-        # 命中 → 已具备；未命中 → 待考察（M2 简化，缺失留给更细规则）
-        gaps.append(GapItem(dimension=dimension, status="have" if hit else "pending"))
+        hits = sum(1 for kw in kws if kw.lower() in haystack)
+        # 命中 → 已具备；未命中 → 待考察；hits 用于已具备维度的优先级
+        gaps.append(GapItem(dimension=dimension, status="have" if hits > 0 else "pending", hits=hits))
     return gaps
 
 

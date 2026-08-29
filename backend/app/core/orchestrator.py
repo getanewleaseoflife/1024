@@ -45,10 +45,16 @@ class InterviewOrchestrator:
         self.persona_id = persona_id
         self.resume_text = resume_text
         self.dimensions = [d["name"] for d in seed["dimensions"]]
-        # 基于简历 Gap 排序维度：待考察（pending）优先问，已具备（have）靠后
+        # 基于简历 Gap 选维度：待考察（pending）全问，已具备（have）按命中数抽前 2 个
         if gaps:
-            gap_map = {g["dimension"]: g["status"] for g in gaps}
-            self.dimensions.sort(key=lambda d: 0 if gap_map.get(d) == "pending" else 1)
+            gap_map = {g["dimension"]: g for g in gaps}
+            pending = [d for d in self.dimensions if gap_map.get(d, {}).get("status") == "pending"]
+            have = sorted(
+                [d for d in self.dimensions if gap_map.get(d, {}).get("status") == "have"],
+                key=lambda d: gap_map.get(d, {}).get("hits", 0),
+                reverse=True,
+            )[:2]
+            self.dimensions = pending + have
         if fast_mode:
             self.dimensions = self.dimensions[:3]  # 快速演示模式：只面试前 3 个维度
         self._dim_data = {d["name"]: d for d in seed["dimensions"]}

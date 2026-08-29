@@ -19,6 +19,7 @@ export interface ResumeProfile {
 export interface GapItem {
   dimension: string
   status: 'have' | 'pending' | 'missing'
+  hits: number
 }
 
 export interface ResumeParseResult {
