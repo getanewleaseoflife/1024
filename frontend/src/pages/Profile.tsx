@@ -49,7 +49,7 @@ const GAP_STYLE = {
 export function Profile() {
   const navigate = useNavigate()
   const { t } = useTranslation()
-  const { state, setPersona, setFastMode, setAvatar } = useInterview()
+  const { state, setPersona, setFastMode, setAvatar, setAvatarEnabled, setReadAloud } = useInterview()
   const [persona, setPersonaLocal] = useState(state.personaId)
   const { profile, gaps, avatar } = state
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -192,6 +192,29 @@ export function Profile() {
           className="w-4 h-4 accent-primary"
         />
         <span className="text-sm">{t('profile.fastMode')}</span>
+      </label>
+
+      <label className="flex items-center gap-2 mb-4 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={state.avatarEnabled}
+          onChange={(e) => setAvatarEnabled(e.target.checked)}
+          className="w-4 h-4 accent-primary"
+        />
+        <span className="text-sm">{t('profile.avatarEnabled')}</span>
+      </label>
+
+      <label
+        className={`flex items-center gap-2 mb-4 cursor-pointer ${!state.avatarEnabled ? 'opacity-50' : ''}`}
+      >
+        <input
+          type="checkbox"
+          checked={state.readAloud}
+          disabled={!state.avatarEnabled}
+          onChange={(e) => setReadAloud(e.target.checked)}
+          className="w-4 h-4 accent-primary"
+        />
+        <span className="text-sm">{t('profile.readAloud')}</span>
       </label>
 
       <button

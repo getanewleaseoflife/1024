@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { apiPost, streamSSE } from '../api/client'
 import type { Evidence, InterviewStart } from '../api/types'
 import { useInterview } from '../store/InterviewContext'
+import { InterviewerAvatar, type AvatarStatus } from '../components/InterviewerAvatar'
 
 type Segment = { type: 'text'; text: string } | { type: 'quote'; text: string }
 
@@ -145,8 +146,22 @@ export function Interview() {
   const [input, setInput] = useState('')
   const [closed, setClosed] = useState(false)
   const [listening, setListening] = useState(false)
+  const [avatarStatus, setAvatarStatus] = useState<AvatarStatus>('idle')
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const startedRef = useRef(false)
+
+  const stopAudio = () => {
+    const audio = audioRef.current
+    if (audio) {
+      audio.pause()
+      audio.currentTime = 0
+      audioRef.current = null
+    }
+  }
 
   useEffect(() => {
+    if (startedRef.current) return
+    startedRef.current = true
     resetEvidence()
     apiPost<InterviewStart>('/interview/start', {
       position_id: state.positionId,
@@ -158,6 +173,9 @@ export function Interview() {
       .then((res) => {
         setSessionId(res.session_id)
         setMessages([{ role: 'interviewer', segments: [{ type: 'text', text: res.opening }] }])
+        if (state.readAloud && state.avatarEnabled && res.opening.trim()) {
+          void playTTS(res.opening)
+        }
       })
       .catch((e) =>
         setMessages([
@@ -167,6 +185,12 @@ export function Interview() {
           },
         ]),
       )
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // 卸载时停掉未播完的音频，避免离开面试页后仍有声音
+  useEffect(() => {
+    return () => stopAudio()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -180,9 +204,12 @@ export function Interview() {
     ])
     setThinking(true)
     setStreamText('')
+    stopAudio()
+    if (state.avatarEnabled) setAvatarStatus('thinking')
 
     let full = ''
     let isClosed = false
+    let failed = false
     try {
       await streamSSE('/interview/answer', { session_id: sessionId, answer }, (event) => {
         if (event.type === 'evidence' && event.evidence) {
@@ -197,28 +224,49 @@ export function Interview() {
       })
     } catch (e) {
       full = `（${String(e)}）`
+      failed = true
     }
 
     if (full) setMessages((prev) => [...prev, parseFollowup(full)])
+    if (full && !failed && state.readAloud && state.avatarEnabled) {
+      void playTTS(full)
+    } else if (state.avatarEnabled) {
+      setAvatarStatus('idle')
+    }
     setStreamText('')
     setThinking(false)
     if (isClosed) setClosed(true)
   }
 
   const playTTS = async (text: string) => {
+    stopAudio()
+    const avatarOn = state.avatarEnabled
     try {
       const res = await fetch('/api/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text }),
       })
-      if (!res.ok) return
+      if (!res.ok) {
+        if (avatarOn) setAvatarStatus('idle')
+        return
+      }
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
       const audio = new Audio(url)
-      await audio.play()
+      audioRef.current = audio
+      if (avatarOn) setAvatarStatus('speaking')
+      audio.onended = () => {
+        if (audioRef.current === audio) audioRef.current = null
+        if (avatarOn) setAvatarStatus('idle')
+      }
+      await audio.play().catch(() => {
+        if (audioRef.current === audio) audioRef.current = null
+        if (avatarOn) setAvatarStatus('idle')
+      })
     } catch {
       // 语音播报失败不阻断主链路
+      if (avatarOn) setAvatarStatus('idle')
     }
   }
 
@@ -241,7 +289,13 @@ export function Interview() {
 
   return (
     <main className="max-w-6xl mx-auto px-5 py-6">
-      <div className="grid grid-cols-3 gap-6">
+      <div className={`grid gap-6 ${state.avatarEnabled ? 'grid-cols-4' : 'grid-cols-3'}`}>
+        {/* 虚拟面试官（左侧，可选显隐） */}
+        {state.avatarEnabled && (
+          <aside className="col-span-1 self-start">
+            <InterviewerAvatar personaId={state.personaId} status={avatarStatus} />
+          </aside>
+        )}
         {/* 对话主区 */}
         <section className="col-span-2 flex flex-col">
           <div className="bg-surface border border-border rounded-card shadow-card p-5">

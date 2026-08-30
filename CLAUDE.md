@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 「岗位胜任力评估智能体」（AI 面试官）——竞赛项目。用大模型智能体模拟资深 HR/业务专家，对高校毕业生进行多轮情景化面试，自动生成胜任力评估报告（能力雷达图 / 优劣分析 / 岗位匹配度 / 提升建议）。
 
-当前状态：**需求与技术方案已完成，代码尚未开始**。开工前必读下面两份权威文档。
+当前状态：**M1~M6 已全部落地**（简历解析 → 画像/Gap → 多轮面试 → 双轨评分报告；6 个岗位；PDF / 语音 / 快速演示均已实现）。改动前必读下面两份权威文档。
 
 ## 权威文档（改动须同步）
 
@@ -46,11 +46,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## 核心设计决策（这些是评审拿分点，勿违背）
 
 1. **追问引擎 = LLM 主导决策 + 状态机硬护栏**。每轮拆两次调用：① 短非流式分类器输出 `{action, reason, evidence{维度/掌握度/原话}, confidence}`（七种 action：澄清/验证/深挖/挑战/迁移/换题/收尾）→ evidence 落到记忆 L3；② 流式生成追问原文。状态机只对硬约束保留否决权（追问上限 / 维度覆盖换题 / 降级结束）。
-2. **RAG 三类知识库**：胜任力模型库、岗位知识库、回答证据库。Hybrid RAG = BGE 向量召回 + jieba 中文关键词召回融合。MVP 只手写 **AI 算法岗**一个岗位的种子库（每维度四件套：考核要点 + 典型面试题带参考答案 + 3 档评分锚点 + 关键词/技能标签表，约 60~90 chunk）。Java/产品岗是"换数据"而非"改代码"。
+2. **RAG 三类知识库**：胜任力模型库、岗位知识库、回答证据库。Hybrid RAG = BGE 向量召回（已实现）+ jieba 中文关键词召回（预留，尚未融合）。岗位知识库以「每维度四件套」组织：考核要点 + 典型面试题带参考答案 + 3 档评分锚点 + 关键词/技能标签表。已内置 6 个岗位（AI 算法 / Java / 产品 / 前端 / 测试 / 数据分析），**新增岗位是「补数据 + 重嵌入」而非「改代码」**。
 3. **长文本记忆三层，MVP 实现两层**：L1 全量对话不滑窗（20~40 轮，DeepSeek 64k 装得下）；L2 增量摘要**预留不实现**；L3 能力证据累积（随追问分类器同一调用抽取，不新增往返）。面试页侧栏**实时可视化 L3 证据清单**——这是"长文本记忆"的演示证据。
 4. **报告评分双轨**：`最终分 = 规则锚点 × 0.6 + LLM 综合 × 0.4`，LLM 单维度调整**封顶 ±1 档**。**证据绑定机械校验**：每个维度分必须绑定候选人原话，`quote` 须与 L3 证据做子串/模糊匹配，LLM 只许引用不许编造；无证据维度不出分、雷达图标「待考察」。
 5. **Prompt 注入防护**：候选人回答统一包裹 `<candidate_answer>…</candidate_answer>` 作为数据注入上下文层，系统层规则不可覆盖；证据化评分本身是注入天花板。
-6. **数据存储**：简历原文仅进程内存；结构化产物落 `tempfile` 临时 SQLite，会话/演示结束即删。岗位胜任力模型存 JSON/SQLite，**新增岗位零代码**（补数据 + 重嵌入）。
+6. **数据存储**：简历原文仅进程内存；单场面试的 L1/L3 记忆落 `tempfile` 临时 SQLite，会话结束即删。跨会话的面试历史另存文件库 `backend/app/data/history.db`（按 `user_id` 隔离，前端用 localStorage UUID 标识用户）。岗位胜任力模型存 JSON（`app/data/positions/<岗位>/seed.json` + `keywords.json`），**新增岗位零代码**（补数据 + 重嵌入）。
 
 ## 框架官方规范（AI 必须遵守）
 
@@ -66,6 +66,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **依赖**：不新增付费/需 key 依赖；新增依赖直接精确 pin 进 `requirements.txt`。
 
 ## 常用命令
+
+一键启动（Windows）：双击 `start.bat`（起后端 + 前端 + 开浏览器），`stop.bat` 停服。也可分别手动启动：
 
 后端（Windows + Git Bash）：
 
@@ -89,20 +91,23 @@ npm run dev                          # http://127.0.0.1:5173
 npm run lint                         # ESLint；npx prettier --check .
 ```
 
+> 目前无自动化测试套件（无 pytest / jest / vitest）；质量门禁 = 后端 `ruff` + `pyright`，前端 `tsc -b`（build 内含）+ ESLint。
+
 环境变量 `backend/.env`：
 
 ```
 DEEPSEEK_API_KEY=sk-xxx
 DEEPSEEK_BASE_URL=https://api.deepseek.com
+DEEPSEEK_MODEL=deepseek-chat
 EMBEDDING_MODEL=BAAI/bge-small-zh-v1.5
 HF_ENDPOINT=https://hf-mirror.com
 ```
 
 ## 项目边界
 
-- **P0 核心**：简历解析（粘贴文本）→ 多轮面试（追问引擎 + 3 档人格）→ RAG + 记忆 → 报告（网页）。先 AI 算法岗跑通，再补 Java/产品经理内容。
-- **P0 增强**（核心跑通后按剩余时间）：PDF 上传、语音（Edge TTS + ASR）、快速演示模式。
-- **后置待定**：视频面试、多语言功能（i18n 已预留）、多用户（会话隔离已预留）。
-- **明确不做**：数字人、表情/情感识别、企业端/HR 后台、移动端。
+- **P0 核心**：简历解析（粘贴文本）→ 多轮面试（追问引擎 + 3 档人格）→ RAG + 长文本记忆 → 报告（网页：雷达图 + 优劣 + 匹配度 + 建议 + STAR）。岗位 6 个（AI 算法 / Java / 产品 / 前端 / 测试 / 数据分析），胜任力模型可配置、新增岗位零代码。
+- **P0 增强**（核心闭环后按剩余时间）：PDF 上传解析、语音（Edge TTS + 浏览器 ASR）、快速演示模式、虚拟人形象 + 跟读（静态 SVG 随人格配色 + 自动语音播报）。
+- **后置待定**：视频面试（倾向「候选人出镜 + AI 面试官语音/文字」）、英文面试内容（多语言 UI 中英双语已实现，i18n 文案资源化）、真实账号体系（多用户已实现：本地用户标识 + 历史记录持久化 + 并发会话隔离）、表情/情感识别（数字人形象已实现为静态虚拟人 + 跟读）。
+- **明确不做**：企业端 / HR 管理后台、移动端 / 小程序。
 
 开发里程碑见 `docs/TECH_DESIGN.md` 第 10 节（M1 骨架 → M2 简历解析 → M3 面试核心 → M4 报告 → M5 岗位扩展 → M6 增强项）。

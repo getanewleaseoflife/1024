@@ -12,6 +12,8 @@ interface InterviewState {
   fastMode: boolean
   interviewDone: boolean
   avatar: string
+  avatarEnabled: boolean
+  readAloud: boolean
 }
 
 interface InterviewContextValue {
@@ -24,6 +26,8 @@ interface InterviewContextValue {
   setFastMode: (fastMode: boolean) => void
   setInterviewDone: (done: boolean) => void
   setAvatar: (avatar: string) => void
+  setAvatarEnabled: (enabled: boolean) => void
+  setReadAloud: (readAloud: boolean) => void
 }
 
 // positionId 初始为空：岗位必须由用户主动选择，无默认值
@@ -38,6 +42,8 @@ const defaultState: InterviewState = {
   fastMode: false,
   interviewDone: false,
   avatar: '',
+  avatarEnabled: true,
+  readAloud: true,
 }
 
 const InterviewContext = createContext<InterviewContextValue | null>(null)
@@ -78,6 +84,8 @@ export function InterviewProvider({ children }: { children: ReactNode }) {
       setFastMode: (fastMode) => setState((s) => ({ ...s, fastMode })),
       setInterviewDone: (done) => setState((s) => ({ ...s, interviewDone: done })),
       setAvatar: (avatar) => setState((s) => ({ ...s, avatar })),
+      setAvatarEnabled: (enabled) => setState((s) => ({ ...s, avatarEnabled: enabled })),
+      setReadAloud: (readAloud) => setState((s) => ({ ...s, readAloud })),
     }),
     [state],
   )

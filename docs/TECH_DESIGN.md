@@ -20,6 +20,7 @@
 | 嵌入模型 | BGE `bge-small-zh-v1.5`（sentence-transformers / torch，本地） | DeepSeek 无 embedding；sentence-transformers 是嵌入标准路径，本地中文嵌入免费 |
 | 记忆 | 自定义状态机 + 结构化记忆层（SQLite） | 可解释性强，便于向评委讲清"长文本记忆"实现 |
 | 语音（增强） | Edge TTS（后端）+ 浏览器 SpeechRecognition | 免费、零 key |
+| 虚拟人（增强） | 前端 SVG 静态形象 + CSS 三态动画 + Edge TTS 跟读 | 零资源、零依赖，复用 TTS |
 | 流式输出 | SSE（Server-Sent Events） | 追问打字机效果，实现简单稳定 |
 | 后端工具链 | Ruff（lint+format）+ pyright（类型检查）+ pre-commit | 一工具覆盖 lint/format，类型检查呼应 FastAPI 类型驱动 |
 | 前端工具链 | ESLint（Vite 官方 flat config）+ Prettier + TS strict | 框架官方规范自动化拦截 |
@@ -179,6 +180,17 @@ interview_session（会话）
 
 **雷达图数据**：岗位专属 5~6 维，ECharts 渲染。
 
+### 3.5 虚拟人形象 + 跟读（对应评审：拟人度 20 分）
+
+**定位**：面试页左侧展示随人格配色的面试官虚拟形象，可选「跟读」让面试官话术自动语音播报，强化「多轮对话 + 拟人」观感。
+
+**实现方式**（纯前端，复用现有 `/api/tts`，零后端改动、零新依赖）：
+
+- **形象**：参数化 SVG（3 档人格配色，与 `tailwind.config.js` 的 `persona.*` token 对齐），无二进制资源
+- **状态机**（音频事件驱动，不用定时器）：`idle`（静默）→ `thinking`（LLM 流式 + TTS 合成期间，呼吸动画）→ `speaking`（`Audio.play` → `ended`，高亮 + 声波环）→ `idle`
+- **跟读**：把手动「🔊 播报」升级为可选自动触发；音频实例提升到 `ref` 管理以处理竞态（新 turn 先停旧音频）；`play()` 失败静默退回文字（浏览器自动播放策略兜底）
+- **开关**：`Profile` 页「显示虚拟面试官 / 虚拟人跟读题目」两个开关（默认开），跟读依赖虚拟人（关则置灰）
+
 ---
 
 ## 4. 接口设计（REST + SSE）
@@ -296,7 +308,7 @@ HF_ENDPOINT=https://hf-mirror.com
 | M3 面试核心 | 追问引擎 + 3 档人格 + RAG + 记忆（AI 算法岗） |
 | M4 报告 | 雷达图 + 评分 + 建议 + STAR |
 | M5 岗位扩展 | 补 Java / 产品 / 前端 / 测试 / 数据分析胜任力模型 + 知识库（已完成） |
-| M6 增强项 | PDF / 语音 / 快速演示模式（按剩余时间） |
+| M6 增强项 | PDF / 语音 / 快速演示模式 / 虚拟人跟读（按剩余时间） |
 
 ---
 
