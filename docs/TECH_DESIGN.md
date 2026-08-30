@@ -20,9 +20,12 @@
 | 嵌入模型 | BGE `bge-small-zh-v1.5`（sentence-transformers / torch，本地） | DeepSeek 无 embedding；sentence-transformers 是嵌入标准路径，本地中文嵌入免费 |
 | 记忆 | 自定义状态机 + 结构化记忆层（SQLite） | 可解释性强，便于向评委讲清"长文本记忆"实现 |
 | 语音（增强） | Edge TTS（后端）+ 浏览器 SpeechRecognition | 免费、零 key |
-| 虚拟人（增强） | 前端 SVG 静态形象 + CSS 三态动画 + Edge TTS 跟读 | 零资源、零依赖，复用 TTS |
+| 虚拟人（增强） | DiceBear Bottts 机器人头像（SVG）+ CSS 三态动画 + Edge TTS 跟读 | 开源 MIT/免费商用，本地出图，复用 TTS |
 | 流式输出 | SSE（Server-Sent Events） | 追问打字机效果，实现简单稳定 |
-| 后端工具链 | Ruff（lint+format）+ pyright（类型检查）+ pre-commit | 一工具覆盖 lint/format，类型检查呼应 FastAPI 类型驱动 |
+| 账号/鉴权 | PyJWT（JWT）+ stdlib PBKDF2 | 零额外付费依赖，密码加盐哈希不存明文，游客模式向后兼容 |
+| 报告导出 | fpdf2 + CJK 字体 | 报告 PDF 下载，字体按内置目录→系统字体降级 |
+| 部署 | Docker + docker-compose（可选） | 本地 `python`+`npm` 一键启动，亦可容器化 |
+| 后端工具链 | Ruff（lint+format）+ pyright（类型检查） | 手动门禁；类型检查呼应 FastAPI 类型驱动 |
 | 前端工具链 | ESLint（Vite 官方 flat config）+ Prettier + TS strict | 框架官方规范自动化拦截 |
 
 > 选型原则：**零额外付费服务、零额外 key、成熟框架/SDK 优先、长期可维护**，同时覆盖评审标准 4（RAG + 长文本记忆）。
@@ -186,7 +189,7 @@ interview_session（会话）
 
 **实现方式**（纯前端，复用现有 `/api/tts`，零后端改动、零新依赖）：
 
-- **形象**：参数化 SVG（3 档人格配色，与 `tailwind.config.js` 的 `persona.*` token 对齐），无二进制资源
+- **形象**：DiceBear「Bottts」机器人头像库（`@dicebear/core` + `@dicebear/bottts`，本地生成 SVG，零运行时网络依赖）；3 档人格靠 `face`/`mouth`/`eyes`/`top`/`sides` 选项差异化（随和圆脸微笑+天线 / 严谨方脸+雷达 / 压力尖角脸+怒嘴+角）
 - **状态机**（音频事件驱动，不用定时器）：`idle`（静默）→ `thinking`（LLM 流式 + TTS 合成期间，呼吸动画）→ `speaking`（`Audio.play` → `ended`，高亮 + 声波环）→ `idle`
 - **跟读**：把手动「🔊 播报」升级为可选自动触发；音频实例提升到 `ref` 管理以处理竞态（新 turn 先停旧音频）；`play()` 失败静默退回文字（浏览器自动播放策略兜底）
 - **开关**：`Profile` 页「显示虚拟面试官 / 虚拟人跟读题目」两个开关（默认开），跟读依赖虚拟人（关则置灰）
@@ -197,15 +200,28 @@ interview_session（会话）
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| GET | `/api/positions` | 获取岗位列表（3 个） |
-| POST | `/api/resume/parse` | 简历解析（文本/PDF）→ 画像 + Gap |
-| POST | `/api/interview/start` | 创建会话，返回开场白（流式） |
-| POST | `/api/interview/answer` | 提交回答，返回追问（SSE 流式） |
-| GET  | `/api/interview/stream` | 面试流式输出（SSE） |
-| POST | `/api/interview/end` | 结束面试 |
-| POST | `/api/report/generate` | 生成报告 |
-| GET  | `/api/report/{id}` | 获取报告 |
-| POST | `/api/tts` | 文字转语音（Edge TTS，增强项） |
+| GET | `/api/health` | 健康检查 |
+| GET | `/api/positions` | 岗位列表（6 个，动态扫描种子库） |
+| POST | `/api/resume/parse` | 简历解析（文本）→ 画像 + Gap |
+| POST | `/api/resume/parse_pdf` | 简历解析（PDF 上传） |
+| POST | `/api/interview/start` | 创建会话，返回开场白 + 维度 |
+| POST | `/api/interview/answer` | 提交回答，SSE 流式返回追问 |
+| POST | `/api/interview/end` | 结束会话 |
+| POST | `/api/report/generate` | 生成报告（返回 `history_id` 供 PDF 导出） |
+| POST | `/api/tts` | 文字转语音（Edge TTS） |
+| POST | `/api/auth/register` | 注册 → `{token, user}` |
+| POST | `/api/auth/login` | 登录 → `{token, user}` |
+| GET | `/api/auth/me` | 当前用户（需 Bearer token） |
+| GET | `/api/history` | 历史列表（按 user_id） |
+| GET | `/api/history/stats` | 历史聚合统计（次数/趋势/薄弱点） |
+| GET | `/api/history/{id}` | 历史详情（含报告） |
+| GET | `/api/history/{id}/pdf` | 报告 PDF 导出 |
+| GET | `/api/settings` | 读取用户设置 |
+| PUT | `/api/settings` | 保存设置 + 运行时切换 provider |
+| POST | `/api/coach/resume-optimize` | 简历优化（JD 匹配度 + STAR 建议） |
+| POST | `/api/coach/growth-plan` | 生成成长计划 |
+| GET | `/api/coach/practice` | 按维度抽题（复用岗位题库） |
+| POST | `/api/coach/grade` | 刷题即时评分 |
 
 **SSE 流式格式**：
 
@@ -230,6 +246,8 @@ report（报告）: id, session_id, radar_data(JSON), strengths, weaknesses, mat
 > 胜任力模型、评分锚点、典型面试题、关键词标签均为**可配置数据**，存 JSON/SQLite，新增岗位零代码（仅需补数据 + 重嵌入）。
 >
 > 存储口径：SQLite 使用 `tempfile` 临时库，简历原文仅进程内存、不写持久文件，会话/演示结束即删（本地、不外发、即清）。
+>
+> **持久库（`app.db`，跨会话保留，按 user 隔离）**：`users`（id/username/password_hash/created_at）、`settings`（user_id/llm_base_url/llm_model/tts_voice）、`interview_history`（id/user_id/position_id/position_name/persona_id/match_score/report_json/created_at）。旧 `history.db` 由 `db.init()` 一次性 `ATTACH` 迁移进 `app.db`（幂等）。
 
 ---
 
@@ -241,7 +259,7 @@ report（报告）: id, session_id, radar_data(JSON), strengths, weaknesses, mat
 | API Key 泄露 | Key 仅存后端 `.env`，`.gitignore` 忽略，前端零接触 |
 | 简历隐私 | 简历原文仅进程内存；结构化产物落 `tempfile` 临时 SQLite，会话/演示结束即删（本地、不外发、即清） |
 | 接口滥用 | 基础限流 + 请求体大小限制 |
-| 越权 | P0 单会话无账号；预留 session 隔离，P1 加 token 鉴权 |
+| 越权 | JWT Bearer token 鉴权（受保护接口经 `get_current_user_id` 依赖）；游客模式经 `X-User-Id` 头按本地 UUID 隔离 |
 
 ---
 
@@ -257,13 +275,12 @@ report（报告）: id, session_id, radar_data(JSON), strengths, weaknesses, mat
 
 ## 8. 部署与运行
 
-**P0 本地运行**（不强制 Docker）：
+**本地运行**（Windows 一键启动 `start.bat`；也可手动）：
 
 ```bash
 # 后端
 cd backend
 python -m venv .venv && source .venv/Scripts/activate   # Windows；非 Windows 用 .venv/bin/activate
-pip install pip-tools && pip-compile requirements.in    # 生成/更新全量锁定 requirements.txt
 pip install -r requirements.txt
 uvicorn app.main:app --reload          # http://127.0.0.1:8000
 
@@ -272,18 +289,27 @@ cd frontend
 npm install
 npm run dev                            # http://127.0.0.1:5173
 
-# 代码质量（pre-commit 提交前自动跑）
+# 代码质量（手动门禁，无 pre-commit 钩子）
 # 后端：ruff check . && ruff format --check . && pyright app/
-# 前端：npm run lint（ESLint）+ npx prettier --check .
+# 前端：npm run lint（ESLint）+ npm run format:check（Prettier）
 ```
 
-环境变量（`backend/.env`）：
+**Docker 部署**（可选，`docker-compose.yml` 含 backend + frontend）：
+
+```bash
+DEEPSEEK_API_KEY=sk-xxx docker compose up -d --build
+# 前端 http://localhost:5173（nginx 静态 + /api 反代），后端 http://localhost:8000
+```
+
+环境变量（`backend/.env` 或 docker-compose 环境）：
 
 ```
 DEEPSEEK_API_KEY=sk-xxx
 DEEPSEEK_BASE_URL=https://api.deepseek.com
+DEEPSEEK_MODEL=deepseek-chat
 EMBEDDING_MODEL=BAAI/bge-small-zh-v1.5
 HF_ENDPOINT=https://hf-mirror.com
+JWT_SECRET=dev-secret-change-me
 ```
 
 ---
@@ -309,6 +335,10 @@ HF_ENDPOINT=https://hf-mirror.com
 | M4 报告 | 雷达图 + 评分 + 建议 + STAR |
 | M5 岗位扩展 | 补 Java / 产品 / 前端 / 测试 / 数据分析胜任力模型 + 知识库（已完成） |
 | M6 增强项 | PDF / 语音 / 快速演示模式 / 虚拟人跟读（按剩余时间） |
+| M7 系统壳① | 账号（JWT）+ DB 收敛（app.db）+ 工作台 + 历史中心 |
+| M8 系统壳② | 报告 PDF 导出 + 设置页 + 多 provider 切换 |
+| M9 闭环模块 | 简历优化 + 成长计划 + 刷题练习 |
+| M10 部署 | Docker 化 + 文档同步 |
 
 ---
 

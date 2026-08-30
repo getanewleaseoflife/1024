@@ -20,7 +20,7 @@
 4. **证据可信**：报告页每个分数都绑定候选人原话，引用用「证据标签」高亮呈现，强化「客观、可审计」的信任感。
 5. **克制一致**：单一 icon 家族、4/8 间距节奏、语义 token 驱动，全站无一处「手写颜色 / 随机间距」。
 
-**风格落点**（ui-ux-pro-max 检索结论）：Flat Design + Minimalism & Swiss Style，Product Type = Job Board/Recruitment（HR Analytics Dashboard 子类）。少量 AI 渐变仅用于品牌标识与人格标识，正文零阴影、零渐变。
+**风格落点**（ui-ux-pro-max 检索结论）：「权威中式」——宋体标题 + 黑体正文 + 深墨蓝主色 + 金琥珀强调，Product Type = Job Board/Recruitment（HR Analytics Dashboard 子类）。以「资深专家出具的正式评估报告」为气质目标，克制的装饰、零重阴影、零渐变。
 
 ---
 
@@ -30,24 +30,24 @@
 
 | Token | 值 | 用途 |
 |-------|-----|------|
-| `--color-primary` | `#0369A1` | 主色：主按钮、链接、当前步骤、雷达图 |
-| `--color-primary-hover` | `#075985` | 主色 hover |
-| `--color-secondary` | `#0EA5E9` | AI 点缀 / 亮蓝强调 |
-| `--color-accent` | `#16A34A` | 成功绿 / 「已具备」/ 主 CTA |
-| `--color-background` | `#F0F9FF` | 页面底（微蓝白） |
+| `--color-primary` | `#1E3A5F` | 主色：主按钮、链接、当前步骤、雷达图 |
+| `--color-primary-hover` | `#16324E` | 主色 hover |
+| `--color-secondary` | `#2563EB` | AI 点缀 / 蓝强调 |
+| `--color-accent` | `#B45309` | 金琥珀强调（「金榜/成长」） |
+| `--color-background` | `#F8FAFC` | 页面底（近白 slate） |
 | `--color-surface` | `#FFFFFF` | 卡片 / 面板 |
-| `--color-foreground` | `#0C4A6E` | 主文本 |
-| `--color-muted` | `#E7EFF5` | 弱底 / 分隔底 |
+| `--color-foreground` | `#0F172A` | 主文本 |
+| `--color-muted` | `#F1F5F9` | 弱底 / 分隔底 |
 | `--color-muted-foreground` | `#475569` | 次要文本 |
-| `--color-border` | `#BAE6FD` | 边框 / 分隔线 |
+| `--color-border` | `#E4E7EB` | 边框 / 分隔线 |
 | `--color-destructive` | `#DC2626` | 危险 / 错误 / 「缺失」 |
 
 **语义扩展（Gap 三类 + 掌握度）：**
 
 | 语义 | 主色 | 浅底 | 用途 |
 |------|------|------|------|
-| 成功 / 已具备 | `#16A34A` | `#DCFCE7` | Gap「已具备」标签 |
-| 警告 / 待考察 | `#D97706` | `#FEF3C7` | Gap「待考察」标签 |
+| 成功 / 已具备 | `#059669` | `#D1FAE5` | Gap「已具备」标签 |
+| 警告 / 待考察 | `#B45309` | `#FEF3C7` | Gap「待考察」标签 |
 | 危险 / 缺失 | `#DC2626` | `#FEE2E2` | Gap「缺失」标签 |
 | 中性 / 未考察 | `#64748B` | `#F1F5F9` | 雷达图「待考察」占位 |
 
@@ -59,20 +59,15 @@
 | 严谨型（资深专家，默认） | `#0369A1` 深蓝 | 犀利、专业 |
 | 压力型（HR 主管/经理） | `#BE123C` 绛红 | 压迫、质疑 |
 
-> 对比度：正文 `#0C4A6E` on `#FFFFFF` ≈ 7.9:1；`#475569` on `#FFFFFF` ≈ 7.6:1；`#0369A1` on `#F0F9FF` ≈ 5.9:1，均 ≥ 4.5:1。深色模式 token 预留（见 §8），P0 仅实现浅色。
+> 对比度：正文 `#0F172A` on `#FFFFFF` ≈ 15.9:1；`#475569` on `#FFFFFF` ≈ 7.6:1；`#FFFFFF` on `#1E3A5F` ≈ 12.6:1，均 ≥ 4.5:1。深色模式 token 预留（见 §8），P0 仅实现浅色。
 
 ### 2.2 字体
 
-- **西文/数字标题**：`Poppins`（600/700），营造现代专业感。
-- **正文 / 中文**：`system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Source Han Sans SC", sans-serif`（Windows 11 下回退到微软雅黑）。
-- 字号阶梯：`12 / 14 / 16 / 18 / 20 / 24 / 32`；正文 16px、行高 1.6；对话正文 15px、行高 1.7。
+- **标题 / 大数字**：宋体栈 `"Noto Serif SC", "Songti SC", "SimSun", serif`（「权威中式」辨识度来源，用于页面标题、匹配度大数字、报告标题）。
+- **正文 / 中文**：系统黑体栈 `system-ui, -apple-system, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif`（Windows 11 下回退到微软雅黑）。
+- 字号阶梯：`12 / 14 / 16 / 18 / 20 / 24 / 32`；正文 16px、行高 1.7；对话正文 15px、行高 1.7。
 - 数字用 `tabular-nums`，防止评分 / 匹配度数字抖动。
-
-Google Fonts（仅西文，中文走系统回退）：
-
-```
-https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&family=Poppins:wght@500;600;700&display=swap
-```
+- 零外部字体依赖：不加载 Google Fonts，中文/拉丁统一走系统栈，宋体标题回落系统宋体。
 
 ### 2.3 间距（4/8 系统）
 
@@ -81,21 +76,21 @@ https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&fami
 ### 2.4 圆角与阴影
 
 - 圆角：`6px`（标签 / 小按钮）、`8px`（输入框 / 按钮）、`12px`（卡片 / 气泡）、`full`（pill / 头像）。
-- 阴影（Flat 风格，极浅）：卡片 `0 1px 2px rgba(12,74,110,0.06)` + `1px` 边框；浮层/侧栏 `0 4px 16px rgba(12,74,110,0.10)`。正文卡片**用边框而非阴影**区分层级。
+- 阴影（Flat 风格，极浅）：卡片 `0 1px 2px rgba(15,23,42,0.05)` + `1px` 边框；浮层/侧栏 `0 4px 16px rgba(15,23,42,0.08)`。正文卡片**用边框而非阴影**区分层级。
 
 ---
 
 ## 3. 页面结构与导航流转
 
-用户旅程（PRD §3.3）：`进入系统 → 选岗位 → 投递简历 → 查看画像 → 选人格 → 面试 → 查看报告`。
+用户旅程（PRD §3.3）：`登录/注册 → 工作台 → 选岗位 → 投递简历 → 查看画像 → 选人格 → 面试 → 查看报告(下载 PDF + 成长计划) → 历史回看`，辅助模块（简历优化 / 刷题）可独立使用。
 
-5 页 + 顶部 5 节点 Stepper：
+顶部 sticky 品牌栏含系统导航（工作台 / 历史记录 / 开始面试 / 设置）+ 登录/退出；面试五步流程仍走顶部 Stepper：
 
 ```
 [岗位选择] → [简历输入] → [能力画像] → [模拟面试] → [评估报告]
 ```
 
-- 顶部为 sticky 品牌栏（logo + 产品名），其下为 5 节点步骤条；当前节点高亮、已完成节点打勾、可回退点击。
+- 面试五步（岗位/简历/画像/面试/报告）期间显示 5 节点步骤条，当前节点高亮、已完成打勾、可回退点击；其余系统页（工作台/历史/设置/优化/刷题）不显示步进条。
 - 面试与报告页为「沉浸式」，收窄顶部、弱化步进条存在感，让对话 / 报告成为焦点。
 
 | 页 | 核心内容 | 关键视觉 |
@@ -104,7 +99,13 @@ https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&fami
 | 简历输入 | 粘贴文本域 + PDF 上传（增强项）+ 隐私说明 | 大文本域 + 解析 CTA + 加载态 |
 | 能力画像 | 候选人基础信息 + Gap 三类分析 + 人格选择 | Gap 标签墙 + 3 档人格选择器 |
 | 面试对话 | 虚拟人形象 + 对话流 + L3 证据侧栏 + 输入区 | 虚拟人（说话/思考态）+ 气泡 + 打字机 + 证据侧栏（重点） |
-| 评估报告 | 雷达图 + 分维度得分 + 优劣 + 建议 + STAR | 雷达图 + 证据绑定（重点） |
+| 评估报告 | 雷达图 + 分维度得分 + 优劣 + 建议 + STAR + 成长计划 | 雷达图 + 证据绑定（重点）+ PDF 下载 |
+| 工作台 | 欢迎 + 统计卡（次数/均分/薄弱维度）+ 匹配度趋势 + 最近面试 | 趋势折线图（ECharts）+ 快捷入口 |
+| 历史中心 | 面试列表 + 逐题复盘（复用报告渲染） | 列表 + 查看 / 下载 PDF |
+| 登录/注册 | 账号表单（用户名 + 密码） | 居中卡片 + 登录/注册切换 |
+| 设置 | 语音/虚拟人开关 + 多 provider 配置 | 开关 + provider 预设 chips + base_url/model 输入 |
+| 简历优化 | JD 匹配度 + 能力缺口 + STAR 改写建议（一键复制） | 匹配度进度条 + 建议卡片 |
+| 刷题练习 | 维度抽题 + 作答 + 即时评分 + 参考答案 | 维度 chips + 评分卡 |
 
 ---
 
@@ -145,8 +146,8 @@ https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&fami
 
 ### 4.5 虚拟人形象 + 跟读（拟人度增强）
 
-- 面试页左侧固定虚拟人卡片：参数化 SVG（3 档人格配色），下方展示人格名 + 状态文案。
-- 三态动画（CSS 驱动，`prefers-reduced-motion` 下禁用）：`idle` 静态 / `thinking` 呼吸 / `speaking` 轻颤 + 声波环。
+- 面试页左侧固定虚拟人卡片：DiceBear「Bottts」机器人头像（圆角方形），下方展示人格名 + 状态文案。
+- 三态动画（CSS 驱动，`prefers-reduced-motion` 下禁用）：`idle` 静态 / `thinking` 呼吸 + 轻微摇摆 / `speaking` 头部轻颤 + 口型唇条开合 + 声波环。
 - 跟读开关（`Profile` 页）：开启后面试官每段话术自动 TTS 播报，`speaking` 状态严格由 `Audio.play` → `ended` 驱动；播报失败静默退回文字。
 
 ---
@@ -156,7 +157,7 @@ https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&fami
 自上而下：
 
 1. **综合匹配度**：大数字（如 `78%`）+ 等级徽标（「匹配」「待提升」等）+ 分维度小计。
-2. **能力雷达图**：ECharts，岗位专属 6 维，单数据集 `#0369A1` 20% 填充 + 顶点数值标签；无证据维度以「待考察」占位（不连线）。
+2. **能力雷达图**：ECharts，岗位专属 6 维，单数据集 `#1E3A5F` 20% 填充 + 顶点数值标签；无证据维度以「待考察」占位（不连线）。
 3. **分维度得分卡**：每个维度 = 分数 + 星级/刻度 + 绑定证据 quote。
 4. **优势 / 劣势**：左右两卡，各列 2~3 条，每条挂证据。
 5. **岗位匹配度 + 提升建议**：建议必须具体可执行（「补 Transformer 注意力机制推导」而非「多学习」）。
@@ -182,7 +183,7 @@ https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&fami
 | 次按钮 | 白底 + 边框 + `foreground` 字 |
 | 输入框 | 高 ≥44px，可见 label（非 placeholder-only），错误在字段下方 + `aria-describedby` |
 | Stepper | 5 节点 + 连接线，完成打勾、当前高亮、未来 muted |
-| 图标 | Phosphor `@phosphor-icons/react`（备选 Heroicons）；线性风格、24px、stroke 1.5，统一 |
+| 图标 | lucide-react（线性风格、24px、stroke 2，统一）；禁 emoji 作图标 |
 
 **交互统一**：所有可点击元素 `cursor-pointer`；hover 150–200ms 颜色/透明度过渡；`prefers-reduced-motion` 下禁用入场动效与打字机闪烁。
 

@@ -1,35 +1,9 @@
-"""面试历史持久化（SQLite 文件库，跨会话保留，按 user 隔离）。"""
+"""面试历史持久化（app.db，跨会话保留，按 user 隔离）+ 聚合统计。"""
 
 import json
-import sqlite3
 from datetime import datetime
-from pathlib import Path
 
-_DB_PATH = Path(__file__).resolve().parent.parent / "data" / "history.db"
-
-
-def _get_conn() -> sqlite3.Connection:
-    conn = sqlite3.connect(_DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
-
-
-def init() -> None:
-    conn = _get_conn()
-    conn.execute(
-        """CREATE TABLE IF NOT EXISTS interview_history (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id TEXT NOT NULL,
-            position_id TEXT,
-            position_name TEXT,
-            persona_id TEXT,
-            match_score INTEGER,
-            report_json TEXT,
-            created_at TEXT
-        )"""
-    )
-    conn.commit()
-    conn.close()
+from app.services import db
 
 
 def save_history(
@@ -40,12 +14,12 @@ def save_history(
     match_score: int,
     report: dict,
 ) -> int:
-    init()
-    conn = _get_conn()
+    db.init()
+    conn = db.get_conn()
     cur = conn.execute(
         "INSERT INTO interview_history "
         "(user_id, position_id, position_name, persona_id, match_score, report_json, created_at) "
-        "VALUES (?,?,?,?,?,?,?)",
+        "VALUES (?, ?, ?, ?, ?, ?, ?)",
         (
             user_id,
             position_id,
@@ -63,11 +37,11 @@ def save_history(
 
 
 def list_history(user_id: str) -> list[dict]:
-    init()
-    conn = _get_conn()
+    db.init()
+    conn = db.get_conn()
     rows = conn.execute(
         "SELECT id, position_name, persona_id, match_score, created_at "
-        "FROM interview_history WHERE user_id=? ORDER BY id DESC",
+        "FROM interview_history WHERE user_id = ? ORDER BY id DESC",
         (user_id,),
     ).fetchall()
     conn.close()
@@ -75,12 +49,48 @@ def list_history(user_id: str) -> list[dict]:
 
 
 def get_history(history_id: int) -> dict | None:
-    init()
-    conn = _get_conn()
-    row = conn.execute("SELECT * FROM interview_history WHERE id=?", (history_id,)).fetchone()
+    db.init()
+    conn = db.get_conn()
+    row = conn.execute("SELECT * FROM interview_history WHERE id = ?", (history_id,)).fetchone()
     conn.close()
     if row is None:
         return None
     data = dict(row)
     data["report"] = json.loads(data.pop("report_json"))
     return data
+
+
+def history_stats(user_id: str) -> dict:
+    """聚合统计：次数 / 平均匹配度 / 趋势 / 最弱维度（供工作台与历史中心可视化）。"""
+    db.init()
+    conn = db.get_conn()
+    rows = conn.execute(
+        "SELECT match_score, created_at, report_json FROM interview_history WHERE user_id = ? ORDER BY id ASC",
+        (user_id,),
+    ).fetchall()
+    conn.close()
+
+    if not rows:
+        return {"count": 0, "avg_match_score": 0, "trend": [], "weakest_dimensions": []}
+
+    scores = [r["match_score"] for r in rows if r["match_score"] is not None]
+    avg = round(sum(scores) / len(scores)) if scores else 0
+    trend = [{"match_score": r["match_score"], "created_at": r["created_at"]} for r in rows]
+
+    # 最弱维度：聚合所有报告的分维度得分，取平均分最低的 3 个
+    dim_scores: dict[str, list[float]] = {}
+    for r in rows:
+        try:
+            report = json.loads(r["report_json"] or "{}")
+        except (json.JSONDecodeError, TypeError):
+            continue
+        for d in report.get("dimension_scores", []):
+            if d.get("score") is not None:
+                dim_scores.setdefault(d["name"], []).append(d["score"])
+
+    weakest = [
+        {"name": name, "avg": round(sum(vals) / len(vals), 1)}
+        for name, vals in sorted(dim_scores.items(), key=lambda kv: sum(kv[1]) / len(kv[1]))[:3]
+    ]
+
+    return {"count": len(rows), "avg_match_score": avg, "trend": trend, "weakest_dimensions": weakest}

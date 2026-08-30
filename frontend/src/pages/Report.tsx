@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
+import { Download } from 'lucide-react'
 import { apiGet, apiPost } from '../api/client'
 import type { Report as ReportData } from '../api/types'
 import { getUserId } from '../api/user'
@@ -29,11 +30,17 @@ function matchLevel(score: number): { labelKey: string; chip: string } {
   return { labelKey: 'matchLevel.weak', chip: 'text-danger bg-danger-bg' }
 }
 
+interface GrowthPlan {
+  phases: { title: string; goal: string; actions: string[] }[]
+}
+
 export function Report() {
   const { t } = useTranslation()
   const { state } = useInterview()
   const [report, setReport] = useState<ReportData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [plan, setPlan] = useState<GrowthPlan | null>(null)
+  const [planBusy, setPlanBusy] = useState(false)
 
   const [searchParams] = useSearchParams()
   const historyId = searchParams.get('history_id')
@@ -51,7 +58,9 @@ export function Report() {
         persona_id: state.personaId,
         user_id: getUserId(),
         evidence: state.evidence,
-        dialogues: [],
+        dialogues: state.dialogues,
+        profile: state.profile,
+        voice_metrics: state.voiceMetrics,
       })
         .then(setReport)
         .catch(() => setReport(null))
@@ -60,21 +69,58 @@ export function Report() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [historyId])
 
+  const genPlan = async () => {
+    if (!report) return
+    setPlanBusy(true)
+    try {
+      const r = await apiPost<GrowthPlan>('/coach/growth-plan', {
+        position_name: report.position_name,
+        weaknesses: report.weaknesses,
+        suggestions: report.suggestions,
+      })
+      setPlan(r)
+    } catch {
+      setPlan({ phases: [] })
+    } finally {
+      setPlanBusy(false)
+    }
+  }
+
   if (loading) {
-    return <main className="max-w-5xl mx-auto px-5 py-10 text-muted-foreground">{t('report.generating')}</main>
+    return (
+      <main className="max-w-5xl mx-auto px-5 py-10 text-muted-foreground">
+        {t('report.generating')}
+      </main>
+    )
   }
 
   if (!report) {
-    return <main className="max-w-5xl mx-auto px-5 py-10 text-muted-foreground">{t('report.failed')}</main>
+    return (
+      <main className="max-w-5xl mx-auto px-5 py-10 text-muted-foreground">
+        {t('report.failed')}
+      </main>
+    )
   }
 
   const level = matchLevel(report.match_score)
+  const downloadId = historyId ?? (report.history_id ? String(report.history_id) : null)
 
   return (
     <main className="max-w-5xl mx-auto px-5 py-10 space-y-6">
-      <div>
-        <h1 className="font-display text-2xl font-semibold">{t('report.title')}</h1>
-        <p className="text-muted-foreground mt-2">{t('report.desc')}</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-display text-2xl font-semibold">{t('report.title')}</h1>
+          <p className="text-muted-foreground mt-2">{t('report.desc')}</p>
+        </div>
+        {downloadId && (
+          <a
+            href={`/api/history/${downloadId}/pdf`}
+            className="h-10 px-4 rounded-lg border border-border text-sm font-medium text-foreground hover:border-primary hover:text-primary transition flex items-center gap-2 shrink-0"
+          >
+            <Download className="w-4 h-4" />
+            {t('report.downloadPdf')}
+          </a>
+        )}
       </div>
 
       {state.avatar && (
@@ -92,7 +138,9 @@ export function Report() {
         <div>
           <div className="text-sm text-muted-foreground mb-1">{t('report.match')}</div>
           <div className="flex items-baseline gap-3">
-            <span className="font-display text-5xl font-bold text-primary">{report.match_score}%</span>
+            <span className="font-display text-5xl font-bold text-primary tabular-nums">
+              {report.match_score}%
+            </span>
             <span className={`text-sm font-medium px-2 py-0.5 rounded-full ${level.chip}`}>
               {t(level.labelKey)}
             </span>
@@ -168,6 +216,51 @@ export function Report() {
         </div>
       </section>
 
+      {/* 逐题复盘（能力证据逐条复盘：维度 / 掌握度 / 原话 / 评分锚点 / 考核要点） */}
+      {report.review && report.review.length > 0 && (
+        <section className="bg-surface border border-border rounded-card p-6 shadow-card">
+          <h2 className="font-medium mb-1">{t('report.review')}</h2>
+          <p className="text-[13px] text-muted-foreground mb-4">{t('report.reviewDesc')}</p>
+          <div className="space-y-3">
+            {report.review.map((r, i) => (
+              <div key={i} className="border border-border rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-medium text-[14px]">{r.dimension}</span>
+                  <span className="flex gap-1">
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <span
+                        key={n}
+                        className={`w-1.5 h-3 rounded-sm ${n <= r.level ? 'bg-primary' : 'bg-muted'}`}
+                      />
+                    ))}
+                  </span>
+                </div>
+                <p className="text-[13px] text-muted-foreground bg-primary-soft border-l-[3px] border-primary pl-2 pr-2 py-1 italic mb-2">
+                  「{r.quote}」
+                </p>
+                {r.anchor && (
+                  <p className="text-[13px] text-muted-foreground">
+                    {t('report.anchor')}：{r.anchor}
+                  </p>
+                )}
+                {r.key_points.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {r.key_points.map((kp) => (
+                      <span
+                        key={kp}
+                        className="text-[12px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground"
+                      >
+                        {kp}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* 优势 / 劣势 */}
       <section className="grid grid-cols-2 gap-6">
         <div className="bg-surface border border-border rounded-card p-6 shadow-card">
@@ -176,6 +269,11 @@ export function Report() {
             {report.strengths.map((s, i) => (
               <li key={i} className="text-[14px] leading-relaxed">
                 {s.text}
+                {s.quote && (
+                  <div className="mt-1 text-[12px] text-muted-foreground bg-primary-soft border-l-[3px] border-primary pl-2 pr-2 py-1 italic">
+                    「{s.quote}」
+                  </div>
+                )}
               </li>
             ))}
           </ul>
@@ -186,6 +284,11 @@ export function Report() {
             {report.weaknesses.map((w, i) => (
               <li key={i} className="text-[14px] leading-relaxed">
                 {w.text}
+                {w.quote && (
+                  <div className="mt-1 text-[12px] text-muted-foreground bg-primary-soft border-l-[3px] border-primary pl-2 pr-2 py-1 italic">
+                    「{w.quote}」
+                  </div>
+                )}
               </li>
             ))}
           </ul>
@@ -218,7 +321,10 @@ export function Report() {
       {/* 通用软素质 */}
       <section className="grid grid-cols-3 gap-6">
         {report.soft_skills.map((s) => (
-          <div key={s.name} className="bg-surface border border-border rounded-card p-5 shadow-card">
+          <div
+            key={s.name}
+            className="bg-surface border border-border rounded-card p-5 shadow-card"
+          >
             <div className="text-sm text-muted-foreground mb-2">
               {t(SOFT_SKILL_KEYS[s.name] ?? s.name)}
             </div>
@@ -228,6 +334,97 @@ export function Report() {
             </div>
           </div>
         ))}
+      </section>
+
+      {/* 表达力（语音情绪） */}
+      {report.voice_metrics && Object.keys(report.voice_metrics).length > 0 && (
+        <section className="bg-surface border border-border rounded-card p-6 shadow-card">
+          <h2 className="font-medium mb-3">{t('interview.voiceTitle')}</h2>
+          <div className="grid grid-cols-3 gap-4 text-[13px]">
+            <div className="text-muted-foreground">
+              {t('interview.speed')}
+              <div className="text-foreground font-medium mt-1">
+                {report.voice_metrics.avg_speed ?? '—'} {t('interview.wpm')}
+              </div>
+            </div>
+            <div className="text-muted-foreground">
+              {t('interview.pauses')}
+              <div className="text-foreground font-medium mt-1">
+                {report.voice_metrics.pause_count ?? 0}
+              </div>
+            </div>
+            <div className="text-muted-foreground">
+              {t('interview.volume')}
+              <div className="text-foreground font-medium mt-1">
+                {report.voice_metrics.volume_label || '—'}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 面试逐字稿（回放） */}
+      {report.dialogues && report.dialogues.length > 0 && (
+        <section className="bg-surface border border-border rounded-card p-6 shadow-card">
+          <h2 className="font-medium mb-3">{t('report.transcript')}</h2>
+          <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+            {report.dialogues.map((d, i) => (
+              <div
+                key={i}
+                className={`flex ${d.role === 'interviewer' ? 'justify-start' : 'justify-end'}`}
+              >
+                <div
+                  className={`max-w-[80%] px-3 py-2 rounded-lg text-[13px] ${
+                    d.role === 'interviewer' ? 'bg-muted' : 'bg-primary-soft'
+                  }`}
+                >
+                  <div className="text-[11px] text-muted-foreground mb-0.5">
+                    {d.role === 'interviewer' ? t('report.interviewer') : t('report.candidate')}
+                  </div>
+                  <span className="whitespace-pre-wrap">{d.text}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* 成长计划 */}
+      <section className="bg-surface border border-border rounded-card p-6 shadow-card">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-medium">{t('report.growthPlan')}</h2>
+          <button
+            onClick={genPlan}
+            disabled={planBusy}
+            className="h-9 px-4 rounded-lg text-sm font-medium bg-primary text-white hover:bg-primary-hover disabled:opacity-40 transition"
+          >
+            {planBusy ? t('report.generatingPlan') : t('report.generatePlan')}
+          </button>
+        </div>
+        {plan && plan.phases.length > 0 ? (
+          <div className="space-y-4">
+            {plan.phases.map((ph, i) => (
+              <div key={i} className="border border-border rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="w-6 h-6 rounded-full bg-primary text-white text-[12px] grid place-items-center shrink-0">
+                    {i + 1}
+                  </span>
+                  <span className="font-medium">{ph.title}</span>
+                </div>
+                <p className="text-[13px] text-muted-foreground mb-2">{ph.goal}</p>
+                <ul className="space-y-1">
+                  {ph.actions.map((a, j) => (
+                    <li key={j} className="text-[13px] leading-relaxed">
+                      · {a}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        ) : (
+          plan && <p className="text-[13px] text-muted-foreground">{t('report.planEmpty')}</p>
+        )}
       </section>
     </main>
   )

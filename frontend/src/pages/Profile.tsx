@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { Check } from 'lucide-react'
 import { useInterview } from '../store/InterviewContext'
 import { compressImage } from '../utils/image'
 
@@ -49,7 +50,8 @@ const GAP_STYLE = {
 export function Profile() {
   const navigate = useNavigate()
   const { t } = useTranslation()
-  const { state, setPersona, setFastMode, setAvatar, setAvatarEnabled, setReadAloud } = useInterview()
+  const { state, setPersona, setFastMode, setAvatar, setAvatarEnabled, setReadAloud } =
+    useInterview()
   const [persona, setPersonaLocal] = useState(state.personaId)
   const { profile, gaps, avatar } = state
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -152,9 +154,12 @@ export function Profile() {
         </div>
       </section>
 
-      {/* 人格选择 */}
+      {/* 人格选择（= 起始轮次） */}
       <section className="bg-surface border border-border rounded-card p-6 shadow-card mb-6">
-        <h2 className="text-sm font-medium text-muted-foreground mb-3">{t('profile.personaTitle')}</h2>
+        <h2 className="text-sm font-medium text-muted-foreground mb-1">
+          {t('profile.personaTitle')}
+        </h2>
+        <p className="text-[12px] text-muted-foreground mb-3">{t('persona.hint')}</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {PERSONAS.map((p) => {
             const selected = persona === p.id
@@ -163,14 +168,16 @@ export function Profile() {
                 key={p.id}
                 onClick={() => handleSelectPersona(p.id)}
                 className={`relative text-left p-4 rounded-lg border transition ${
-                  selected ? `${p.border} ${p.bg}` : 'border-border hover:border-muted-foreground/40'
+                  selected
+                    ? `${p.border} ${p.bg}`
+                    : 'border-border hover:border-muted-foreground/40'
                 }`}
               >
                 {selected && (
                   <span
-                    className={`absolute top-2 right-2 w-5 h-5 rounded-full ${p.dot} text-white grid place-items-center text-[11px]`}
+                    className={`absolute top-2 right-2 w-5 h-5 rounded-full ${p.dot} text-white grid place-items-center`}
                   >
-                    ✓
+                    <Check className="w-3 h-3" />
                   </span>
                 )}
                 <div className="flex items-center gap-2 mb-2">

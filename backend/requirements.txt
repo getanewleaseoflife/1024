@@ -7,6 +7,9 @@ pydantic-settings==2.6.1
 # 大模型（DeepSeek，OpenAI 兼容协议）
 openai==1.57.0
 
+# 账号（JWT）
+PyJWT==2.10.1
+
 # RAG / 长文本记忆
 chromadb==1.5.9
 fastembed==0.8.0

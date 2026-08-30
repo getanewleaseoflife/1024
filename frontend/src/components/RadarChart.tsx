@@ -14,7 +14,7 @@ interface RadarChartProps {
 
 /**
  * 能力雷达图：ECharts setOption 驱动。
- * 视觉规格见 docs/DESIGN.md §5 —— 单数据集 #0369A1 20% 填充 + 顶点数值标签。
+ * 视觉规格见 docs/DESIGN.md §5 —— 单数据集 #1E3A5F 20% 填充 + 顶点数值标签。
  */
 export function RadarChart({ indicators, max = 5 }: RadarChartProps) {
   const ref = useRef<HTMLDivElement>(null)
@@ -29,9 +29,9 @@ export function RadarChart({ indicators, max = 5 }: RadarChartProps) {
         indicator: indicators.map((i) => ({ name: i.name, max })),
         radius: '65%',
         axisName: { color: '#475569', fontSize: 13 },
-        splitArea: { areaStyle: { color: ['#FFFFFF', '#F0F9FF'] } },
-        splitLine: { lineStyle: { color: '#BAE6FD' } },
-        axisLine: { lineStyle: { color: '#BAE6FD' } },
+        splitArea: { areaStyle: { color: ['#FFFFFF', '#F8FAFC'] } },
+        splitLine: { lineStyle: { color: '#E4E7EB' } },
+        axisLine: { lineStyle: { color: '#E4E7EB' } },
       },
       series: [
         {
@@ -42,10 +42,10 @@ export function RadarChart({ indicators, max = 5 }: RadarChartProps) {
               name: '能力评估',
               symbol: 'circle',
               symbolSize: 6,
-              lineStyle: { color: '#0369A1', width: 2 },
-              itemStyle: { color: '#0369A1' },
-              areaStyle: { color: 'rgba(3,105,161,0.2)' },
-              label: { show: true, color: '#0369A1', fontSize: 12 },
+              lineStyle: { color: '#1E3A5F', width: 2 },
+              itemStyle: { color: '#1E3A5F' },
+              areaStyle: { color: 'rgba(30,58,95,0.2)' },
+              label: { show: true, color: '#1E3A5F', fontSize: 12 },
             },
           ],
         },
