@@ -6,20 +6,8 @@
   color-scheme: light;
 }
 
-@layer base {
-  html {
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-  body {
-    background: #f8fafc;
-    line-height: 1.7;
-    font-feature-settings: 'tnum' 1;
-  }
-  :focus-visible {
-    outline: 2px solid #1e3a5f;
-    outline-offset: 2px;
-  }
+body {
+  font-feature-settings: 'tnum' 1;
 }
 
 /* SSE 打字机光标 */
@@ -36,7 +24,7 @@
   display: inline-block;
   width: 2px;
   height: 1.1em;
-  background: #1e3a5f;
+  background: #0369a1;
   vertical-align: -2px;
   margin-left: 2px;
   animation: blink 1s step-end infinite;
@@ -78,115 +66,10 @@
   animation: rise 0.35s ease both;
 }
 
-/* 虚拟人三态动画：thinking 呼吸 / speaking 轻颤 + 声波环 */
-@keyframes avatar-breathe {
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 0.92;
-  }
-  50% {
-    transform: scale(1.03);
-    opacity: 1;
-  }
-}
-.avatar-thinking {
-  animation: avatar-breathe 1.6s ease-in-out infinite;
-}
-
-@keyframes avatar-speak {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-}
-.avatar-speaking {
-  animation: avatar-speak 0.5s ease-in-out infinite;
-}
-
-@keyframes avatar-ring {
-  0% {
-    transform: scale(1);
-    opacity: 0.6;
-  }
-  100% {
-    transform: scale(1.25);
-    opacity: 0;
-  }
-}
-.avatar-ring {
-  animation: avatar-ring 1.2s ease-out infinite;
-}
-
-/* 说话时头部轻颤，模拟发声带动身体 */
-@keyframes avatar-talk {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-2px);
-  }
-}
-.avatar-talk {
-  animation: avatar-talk 0.4s ease-in-out infinite;
-}
-
-/* 思考时轻微左右摇摆（低头沉思感） */
-@keyframes avatar-sway {
-  0%,
-  100% {
-    transform: rotate(-3deg);
-  }
-  50% {
-    transform: rotate(3deg);
-  }
-}
-.avatar-sway {
-  animation: avatar-sway 2.6s ease-in-out infinite;
-}
-
-/* 说话口型：底部发光唇条，随音节开合 */
-.avatar-mouth {
-  position: absolute;
-  left: 50%;
-  bottom: 21%;
-  width: 22%;
-  height: 11%;
-  border-radius: 999px;
-  transform-origin: center;
-  box-shadow: 0 0 8px currentColor;
-  animation: avatar-lipsync 0.2s ease-in-out infinite alternate;
-}
-@keyframes avatar-lipsync {
-  from {
-    transform: translateX(-50%) scaleY(0.12);
-  }
-  to {
-    transform: translateX(-50%) scaleY(1);
-  }
-}
-
-/* DiceBear 头像 SVG 撑满圆形容器 */
-.avatar-svg svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .cursor-blink,
   .thinking-dot,
-  .rise,
-  .avatar-thinking,
-  .avatar-speaking,
-  .avatar-ring,
-  .avatar-talk,
-  .avatar-sway,
-  .avatar-mouth {
+  .rise {
     animation: none !important;
   }
 }
