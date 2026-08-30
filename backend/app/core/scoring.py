@@ -18,8 +18,8 @@ _SCORE_PROMPT = """你是岗位胜任力评估专家。根据候选人的能力�
 {{
   "scores": {{"维度名": 0到5的整数}},
   "soft_skills": {{"沟通表达": 0到5的整数, "逻辑思维": 0到5的整数, "临场应变": 0到5的整数}},
-  "strengths": ["优势1（基于证据）"],
-  "weaknesses": ["劣势1（基于证据）"],
+  "strengths": [{{"text": "优势1", "quote": "证据原话"}}],
+  "weaknesses": [{{"text": "劣势1", "quote": "证据原话"}}],
   "suggestions": ["具体可执行的提升建议1"]
 }}
 
@@ -27,6 +27,9 @@ _SCORE_PROMPT = """你是岗位胜任力评估专家。根据候选人的能力�
 - 沟通表达：回答的条理性与清晰度
 - 逻辑思维：回答的逻辑严谨性
 - 临场应变：对追问的反应与抗压
+
+每条 strength/weakness 的 quote 必须是从上面「能力证据」里原样复制的一句原话（作为该结论的依据）；
+若某结论无对应证据，quote 用空字符串 ""。
 """
 
 
@@ -56,8 +59,8 @@ def _llm_score(position: str, evidence_by_dim: dict[str, list[dict]], rule: dict
         data = json.loads(raw)
         scores = data.get("scores", {})
         soft_skills = data.get("soft_skills", {})
-        strengths = data.get("strengths", [])
-        weaknesses = data.get("weaknesses", [])
+        strengths = _normalize_items(data.get("strengths", []))
+        weaknesses = _normalize_items(data.get("weaknesses", []))
         suggestions = data.get("suggestions", [])
     except (json.JSONDecodeError, AttributeError):
         scores, soft_skills, strengths, weaknesses, suggestions = {}, {}, [], [], []
@@ -73,6 +76,16 @@ def _llm_score(position: str, evidence_by_dim: dict[str, list[dict]], rule: dict
                 round(min(max(llm, rule_score - _LLM_MAX_ADJUST), rule_score + _LLM_MAX_ADJUST), 1),
             ),
         )
+
+    # 优劣证据绑定机械校验：quote 须为证据原话子串，否则置空（保留 text）
+    all_evidence = [e for evs in evidence_by_dim.values() for e in evs]
+    for item in strengths:
+        if not bind_quote(item["quote"], all_evidence):
+            item["quote"] = ""
+    for item in weaknesses:
+        if not bind_quote(item["quote"], all_evidence):
+            item["quote"] = ""
+
     return {
         "scores": clamped,
         "soft_skills": soft_skills,
@@ -80,6 +93,22 @@ def _llm_score(position: str, evidence_by_dim: dict[str, list[dict]], rule: dict
         "weaknesses": weaknesses,
         "suggestions": suggestions,
     }
+
+
+def _normalize_items(items: list) -> list[dict]:
+    """把 LLM 返回的优劣条目规整为 [{text, quote}]（兼容返回纯字符串的旧格式）。"""
+    result: list[dict] = []
+    for it in items:
+        if isinstance(it, dict):
+            text = it.get("text", "")
+            quote = it.get("quote", "")
+        elif isinstance(it, str):
+            text, quote = it, ""
+        else:
+            continue
+        if text:
+            result.append({"text": text, "quote": quote})
+    return result
 
 
 def bind_quote(quote: str, evidence_list: list[dict]) -> bool:

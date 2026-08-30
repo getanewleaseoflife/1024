@@ -99,15 +99,16 @@ def _persona_context(persona: dict) -> str:
     )
 
 
-def generate_opening(position: str, persona_id: str, first_question: str) -> str:
+def generate_opening(position: str, persona_id: str, first_question: str, total_rounds: int = 1) -> str:
     """生成开场白（寒暄 + 自我介绍 + 流程说明 + 引出第一题）。"""
     persona = get_persona(persona_id)
+    rounds_note = f"本次面试共 {total_rounds} 轮，这是第 1 轮" if total_rounds > 1 else "本次面试会考察几个维度的能力"
     prompt = (
         f"{_persona_context(persona)}\n\n"
         f"你正在面试 {position} 岗位的候选人。\n"
         f"请生成自然的开场白，要求：\n"
         f"1. 寒暄 + 自我介绍（符合你的人格语气）\n"
-        f"2. 简短说明本次面试会考察几个维度的能力\n"
+        f"2. 简短说明：{rounds_note}\n"
         f"3. 自然引出第一道题：{first_question}\n"
         f"4. 可带一句肢体语言描写\n"
         f"5. 只输出面试官说的话，2~3 句话即可"
@@ -147,6 +148,28 @@ def generate_transition(position: str, persona_id: str, dimension: str, question
         f"1. 承上启下、自然衔接（不要生硬说「进入下一维度」）\n"
         f"2. 语气符合人格\n"
         f"3. 只输出面试官说的话，含引出新题目"
+    )
+    yield from chat_stream(
+        [{"role": "system", "content": _SYSTEM_RULE}, {"role": "user", "content": prompt}],
+        temperature=persona["temperature"],
+    )
+
+
+def generate_round_transition(
+    position: str, persona_id: str, verdict: str, avg_level: float, first_question: str
+) -> Iterator[str]:
+    """生成轮次切换语：宣布上一轮结论 + 以新人格引出下一轮第一题。"""
+    persona = get_persona(persona_id)
+    verdict_text = "表现达标，晋级" if verdict == "晋级" else "本轮尚有薄弱点，待提升"
+    prompt = (
+        f"{_persona_context(persona)}\n\n"
+        f"你正在面试 {position} 岗位的候选人，现在进入新的一轮（你是新的人格口吻）。\n"
+        f"上一轮综合掌握度 {avg_level}/5，判定：{verdict_text}。\n"
+        f"请生成一句自然的轮次过渡语，要求：\n"
+        f"1. 用一句话总结上一轮并宣布结论\n"
+        f"2. 自然引出这一轮的第一道题：{first_question}\n"
+        f"3. 语气符合你的人格\n"
+        f"4. 只输出面试官说的话，2~3 句"
     )
     yield from chat_stream(
         [{"role": "system", "content": _SYSTEM_RULE}, {"role": "user", "content": prompt}],

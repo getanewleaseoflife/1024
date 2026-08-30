@@ -62,13 +62,16 @@
 
 | 层 | 选型 |
 |----|------|
-| 前端 | React 18 + Vite + TypeScript + Tailwind + ECharts |
+| 前端 | React 18 + Vite + TypeScript + Tailwind + ECharts + DiceBear 头像 |
 | 后端 | Python 3.10+ / FastAPI |
 | LLM | DeepSeek（OpenAI 兼容协议，官方 `openai` SDK） |
 | RAG | Chroma（嵌入式）+ BGE `bge-small-zh-v1.5`（fastembed / ONNX，本地，无 torch）+ jieba 关键词 |
 | 记忆 | 状态机 + SQLite（`tempfile` 临时库） |
 | 语音 | Edge TTS + 浏览器 SpeechRecognition |
 | 流式 | SSE |
+| 账号/鉴权 | PyJWT（JWT）+ stdlib PBKDF2 |
+| 报告导出 | fpdf2 + CJK 字体 |
+| 部署 | Docker + docker-compose（可选） |
 
 ---
 
@@ -83,10 +86,15 @@ backend/
 │   ├── config.py              # 配置加载（.env：DeepSeek key/base、嵌入模型、降级开关）
 │   ├── api/                   # 路由层（薄，只做参数校验 + 委托编排）
 │   │   ├── positions.py       # GET /api/positions
-│   │   ├── resume.py          # POST /api/resume/parse
-│   │   ├── interview.py       # /api/interview/*（start/answer/stream/end）
-│   │   ├── report.py          # /api/report/*
-│   │   └── tts.py             # POST /api/tts（增强项）
+│   │   ├── resume.py          # POST /api/resume/parse + parse_pdf
+│   │   ├── interview.py       # /api/interview/*（start/answer/end）
+│   │   ├── report.py          # POST /api/report/generate
+│   │   ├── tts.py             # POST /api/tts（增强项）
+│   │   ├── auth.py            # 注册/登录/me（JWT）
+│   │   ├── deps.py            # 轻量鉴权依赖（Bearer / X-User-Id）
+│   │   ├── history.py         # /api/history/*（列表/统计/详情/PDF）
+│   │   ├── settings.py        # /api/settings（多 provider 配置）
+│   │   └── coach.py           # 简历优化/成长计划/刷题
 │   ├── schemas/               # Pydantic 模型：请求/响应 + LLM 结构化输出校验
 │   │   ├── resume.py          # 简历画像、能力标签、Gap
 │   │   ├── interview.py       # 追问分类器输出 {action, reason, evidence, confidence}
@@ -99,12 +107,20 @@ backend/
 │   │   ├── rag.py             # RAG 服务：向量召回 + jieba 关键词融合
 │   │   ├── persona.py         # 3 档人格模板
 │   │   ├── scoring.py         # 评分引擎：规则锚点 ×0.6 + LLM ×0.4（±1 封顶）
-│   │   └── report_generator.py# 报告生成器：评分→雷达图→优劣→建议→STAR
+│   │   ├── report_generator.py# 报告生成器：评分→雷达图→优劣→建议→STAR
+│   │   ├── resume_optimizer.py# 简历优化：JD 匹配 + STAR 建议
+│   │   ├── growth_plan.py     # 成长计划
+│   │   └── practice.py        # 刷题（复用岗位题库）
 │   ├── services/              # 基础设施/外部服务封装（可被 Mock 替换）
-│   │   ├── llm.py             # DeepSeek 客户端：非流式 JSON / 流式（openai SDK）
+│   │   ├── llm.py             # LLM 客户端（openai SDK，支持运行时切 provider）
 │   │   ├── embedding.py       # BGE 本地嵌入（fastembed / ONNX）
 │   │   ├── vectorstore.py     # Chroma 读写
-│   │   ├── db.py              # SQLite（tempfile 临时库）连接与表初始化
+│   │   ├── db.py              # SQLite（app.db 持久库）连接与表初始化
+│   │   ├── auth.py            # PBKDF2 + JWT
+│   │   ├── settings.py        # 用户设置存储
+│   │   ├── history.py         # 面试历史持久化 + 统计
+│   │   ├── report_pdf.py      # 报告 PDF 导出
+│   │   ├── pdf.py             # 简历 PDF 文本提取（pypdf）
 │   │   └── tts.py             # Edge TTS
 │   └── data/                  # 岗位胜任力模型种子库（数据，非代码）
 │       └── positions/
@@ -126,7 +142,7 @@ frontend/
 │   ├── main.tsx / App.tsx     # 入口 + 路由
 │   ├── api/                   # REST + SSE 客户端封装（含流式解析）
 │   ├── pages/                 # 简历输入 · 岗位选择 · 画像 · 面试 · 报告
-│   ├── components/            # 面试对话流、L3 证据侧栏、雷达图、评分卡、Gap 标签
+│   ├── components/            # 面试对话流、L3 证据侧栏、虚拟人形象、雷达图、评分卡、Gap 标签
 │   ├── store/                 # 会话状态（按 session_id 隔离）
 │   ├── i18n/                  # 文案资源化（预留多语言）
 │   └── styles/                # Tailwind + 设计 token
@@ -240,6 +256,7 @@ report（报告）: id, session_id, radar_data(JSON), strengths, weaknesses, mat
 - **进程内存**：简历原文（不写持久文件）。
 - **可配置数据**：胜任力模型 / 评分锚点 / 典型题 / 关键词标签 → JSON/SQLite，**新增岗位零代码**（补数据 + 重嵌入）。
 - **表关系**：`position 1─N dimension`；`session 1─N question_record / ability_evidence`；`session 1─1 report`。
+- **持久库 `app.db`（跨会话，按 user 隔离）**：`users` / `settings` / `interview_history`（含 `report_json` 整份报告）；旧 `history.db` 由 `db.init()` 一次性 `ATTACH` 迁移进 `app.db`。
 
 ---
 
@@ -247,15 +264,17 @@ report（报告）: id, session_id, radar_data(JSON), strengths, weaknesses, mat
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| GET | `/api/positions` | 岗位列表（3 个） |
-| POST | `/api/resume/parse` | 简历解析（文本/PDF）→ 画像 + Gap |
-| POST | `/api/interview/start` | 创建会话，返回开场白（流式） |
+| GET | `/api/positions` | 岗位列表（6 个） |
+| POST | `/api/resume/parse` | 简历解析（文本）→ 画像 + Gap |
+| POST | `/api/interview/start` | 创建会话，返回开场白 + 维度 |
 | POST | `/api/interview/answer` | 提交回答，返回追问（SSE 流式） |
-| GET  | `/api/interview/stream` | 面试流式输出（SSE） |
-| POST | `/api/interview/end` | 结束面试 |
-| POST | `/api/report/generate` | 生成报告 |
-| GET  | `/api/report/{id}` | 获取报告 |
+| POST | `/api/interview/end` | 结束会话 |
+| POST | `/api/report/generate` | 生成报告（返回 history_id） |
 | POST | `/api/tts` | 文字转语音（增强项） |
+| POST | `/api/auth/register` / `/api/auth/login` | 注册/登录 → `{token, user}` |
+| GET | `/api/history` / `/api/history/stats` / `/api/history/{id}` / `/api/history/{id}/pdf` | 历史列表 / 聚合统计 / 详情 / PDF 导出 |
+| GET/PUT | `/api/settings` | 读取 / 保存用户设置 |
+| POST | `/api/coach/*` | 简历优化 / 成长计划 / 刷题抽题与评分 |
 
 SSE 流式格式：
 
@@ -305,9 +324,9 @@ IDLE → OPENING(开场) → ASK(提问) → WAIT(等回答)
 
 ### 12.2 环境与边界
 
-- 运行环境 Windows 11，Python 3.10+；P0 本地运行（不强制 Docker）。
-- P0 单会话；**预留** i18n 文案资源化、会话隔离（P1 加账号）。
-- 明确不做：数字人 / 表情情感识别 / 企业端后台 / 移动端。
+- 运行环境 Windows 11，Python 3.10+；本地 `python`+`npm` 一键启动，可选 Docker。
+- 已实现：JWT 账号（游客模式向后兼容）、i18n 中英双语、会话隔离、面试历史持久化。
+- 明确不做：表情情感识别 / 企业端后台 / 移动端。（数字人已实现为静态虚拟人形象 + 跟读，见 TECH_DESIGN §3.5）
 
 ### 12.3 文档同步（硬规定）
 

@@ -16,15 +16,18 @@ class ReportRequest(BaseModel):
     user_id: str = ""
     evidence: list[dict] = []
     dialogues: list[dict] = []
+    profile: dict = {}
+    voice_metrics: dict = {}
 
 
 @router.post("/report/generate")
 def generate(req: ReportRequest) -> dict:
     if not req.evidence:
         raise HTTPException(status_code=400, detail="暂无能力证据，无法生成报告")
-    report = generate_report(req.position_id, req.evidence, req.dialogues)
+    report = generate_report(req.position_id, req.evidence, req.dialogues, req.profile, req.voice_metrics)
+    history_id: int | None = None
     if req.user_id:
-        history.save_history(
+        history_id = history.save_history(
             req.user_id,
             req.position_id,
             report["position_name"],
@@ -32,4 +35,5 @@ def generate(req: ReportRequest) -> dict:
             report["match_score"],
             report,
         )
+    report["history_id"] = history_id
     return report
