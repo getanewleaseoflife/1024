@@ -1,44 +1,43 @@
 /** @type {import('tailwindcss').Config} */
 // 设计 Token 来源：docs/DESIGN.md §2（语义化配色 / 字体 / 圆角阴影）
-// 风格方向：「权威中式」——宋体标题 + 黑体正文 + 深墨蓝 + 金琥珀强调。
+// 与 docs/design-prototype.html 中的 token 保持一致。
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
       colors: {
-        primary: { DEFAULT: '#1E3A5F', hover: '#16324E', soft: '#E8EEF5' },
-        secondary: '#2563EB',
-        accent: '#B45309',
-        background: '#F8FAFC',
+        primary: { DEFAULT: '#0369A1', hover: '#075985', soft: '#E0F2FE' },
+        secondary: '#0EA5E9',
+        accent: '#16A34A',
+        background: '#F0F9FF',
         surface: '#FFFFFF',
-        foreground: '#0F172A',
-        muted: '#F1F5F9',
+        foreground: '#0C4A6E',
+        muted: '#E7EFF5',
         'muted-foreground': '#475569',
-        border: '#E4E7EB',
+        border: '#BAE6FD',
         destructive: '#DC2626',
-        success: { DEFAULT: '#059669', bg: '#D1FAE5' },
-        warning: { DEFAULT: '#B45309', bg: '#FEF3C7' },
+        success: { DEFAULT: '#16A34A', bg: '#DCFCE7' },
+        warning: { DEFAULT: '#D97706', bg: '#FEF3C7' },
         danger: { DEFAULT: '#DC2626', bg: '#FEE2E2' },
         neutral: { DEFAULT: '#64748B', bg: '#F1F5F9' },
         persona: { friendly: '#0D9488', rigorous: '#0369A1', stress: '#BE123C' },
       },
       fontFamily: {
         sans: [
+          'Open Sans',
           'system-ui',
           '-apple-system',
           'Segoe UI',
           'PingFang SC',
-          'Hiragino Sans GB',
           'Microsoft YaHei',
           'Noto Sans SC',
           'sans-serif',
         ],
-        // 宋体标题栈：「权威中式」辨识度来源（标题/大数字/报告）
-        display: ['Noto Serif SC', 'Songti SC', 'SimSun', 'STSong', 'serif'],
+        display: ['Poppins', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', 'sans-serif'],
       },
       boxShadow: {
-        card: '0 1px 2px rgba(15,23,42,0.05)',
-        panel: '0 4px 16px rgba(15,23,42,0.08)',
+        card: '0 1px 2px rgba(12,74,110,0.06)',
+        panel: '0 4px 16px rgba(12,74,110,0.10)',
       },
       borderRadius: {
         card: '12px',

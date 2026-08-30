@@ -1,29 +1,13 @@
 import { useTranslation } from 'react-i18next'
-import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { useAuth } from '../store/AuthContext'
-
-const NAV = [
-  { to: '/', labelKey: 'nav.home', end: true },
-  { to: '/history', labelKey: 'nav.history', end: false },
-  { to: '/position', labelKey: 'nav.interview', end: false },
-  { to: '/settings', labelKey: 'nav.settings', end: false },
-]
 
 export function Header() {
   const { t, i18n } = useTranslation()
   const isZh = i18n.language.startsWith('zh')
-  const { user, logout } = useAuth()
-  const navigate = useNavigate()
-
-  const handleLogout = () => {
-    logout()
-    navigate('/')
-  }
 
   return (
     <header className="sticky top-0 z-40 bg-surface/90 backdrop-blur border-b border-border">
-      <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between gap-4">
-        <Link to="/" className="flex items-center gap-3 shrink-0">
+      <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
+        <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-lg bg-primary text-white grid place-items-center">
             <svg
               className="w-5 h-5"
@@ -47,55 +31,18 @@ export function Header() {
               {t('header.subtitle')}
             </div>
           </div>
-        </Link>
-
-        {user && (
-          <nav className="flex items-center gap-1">
-            {NAV.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.end}
-                className={({ isActive }) =>
-                  `h-8 px-3 rounded-md text-[13px] font-medium flex items-center transition ${
-                    isActive
-                      ? 'bg-primary-soft text-primary'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`
-                }
-              >
-                {t(item.labelKey)}
-              </NavLink>
-            ))}
-          </nav>
-        )}
-
-        <div className="flex items-center gap-2 shrink-0">
+        </div>
+        <div className="flex items-center gap-2">
           <button
             onClick={() => i18n.changeLanguage(isZh ? 'en' : 'zh-CN')}
-            className="h-8 px-2.5 rounded-md border border-border text-[12px] font-medium text-muted-foreground hover:text-primary hover:border-primary transition"
+            className="h-7 px-2.5 rounded-md border border-border text-[12px] font-medium text-muted-foreground hover:text-primary hover:border-primary transition"
             title="Switch language"
           >
             {isZh ? 'EN' : '中文'}
           </button>
-          {user ? (
-            <div className="flex items-center gap-2">
-              <span className="text-[13px] font-medium">{user.username}</span>
-              <button
-                onClick={handleLogout}
-                className="h-8 px-2.5 rounded-md border border-border text-[12px] font-medium text-muted-foreground hover:text-danger hover:border-danger transition"
-              >
-                {t('auth.logout')}
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => navigate('/login')}
-              className="h-8 px-3 rounded-md text-[13px] font-medium bg-primary text-white hover:bg-primary-hover transition"
-            >
-              {t('auth.login')}
-            </button>
-          )}
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-success px-2.5 py-1 rounded-full bg-success-bg">
+            <span className="w-1.5 h-1.5 rounded-full bg-success"></span> {t('header.ready')}
+          </span>
         </div>
       </div>
     </header>

@@ -1,7 +1,6 @@
 import { Fragment } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Check } from 'lucide-react'
 import { useInterview } from '../store/InterviewContext'
 
 interface Step {
@@ -62,7 +61,7 @@ export function Stepper() {
                             : 'bg-surface text-muted-foreground border-border'
                     }`}
                   >
-                    {isDone ? <Check className="w-3.5 h-3.5" /> : i + 1}
+                    {isDone ? '✓' : i + 1}
                   </span>
                   <span
                     className={`ml-2 text-[13px] transition ${

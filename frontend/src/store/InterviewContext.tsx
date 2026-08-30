@@ -1,11 +1,5 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from 'react'
-import type { Evidence, GapItem, ResumeProfile, VoiceMetrics } from '../api/types'
-
-/** 面试对话逐字稿一行（供逐题复盘/历史回看）。 */
-export interface DialogLine {
-  role: 'interviewer' | 'candidate'
-  text: string
-}
+import type { Evidence, GapItem, ResumeProfile } from '../api/types'
 
 interface InterviewState {
   positionId: string
@@ -18,11 +12,6 @@ interface InterviewState {
   fastMode: boolean
   interviewDone: boolean
   avatar: string
-  avatarEnabled: boolean
-  readAloud: boolean
-  ttsVoice: string
-  voiceMetrics: VoiceMetrics | null
-  dialogues: DialogLine[]
 }
 
 interface InterviewContextValue {
@@ -35,11 +24,6 @@ interface InterviewContextValue {
   setFastMode: (fastMode: boolean) => void
   setInterviewDone: (done: boolean) => void
   setAvatar: (avatar: string) => void
-  setAvatarEnabled: (enabled: boolean) => void
-  setReadAloud: (readAloud: boolean) => void
-  setTtsVoice: (voice: string) => void
-  setVoiceMetrics: (metrics: VoiceMetrics | null) => void
-  setDialogues: (dialogues: DialogLine[]) => void
 }
 
 // positionId 初始为空：岗位必须由用户主动选择，无默认值
@@ -54,11 +38,6 @@ const defaultState: InterviewState = {
   fastMode: false,
   interviewDone: false,
   avatar: '',
-  avatarEnabled: localStorage.getItem('avatarEnabled') !== '0',
-  readAloud: localStorage.getItem('readAloud') !== '0',
-  ttsVoice: localStorage.getItem('ttsVoice') ?? '',
-  voiceMetrics: null,
-  dialogues: [],
 }
 
 const InterviewContext = createContext<InterviewContextValue | null>(null)
@@ -69,7 +48,7 @@ export function InterviewProvider({ children }: { children: ReactNode }) {
   const value = useMemo<InterviewContextValue>(
     () => ({
       state,
-      // 改岗位 → 级联重置下游（简历/画像/证据/对话/面试结束）
+      // 改岗位 → 级联重置下游（简历/画像/证据/面试结束）
       setPosition: (id, name) =>
         setState((s) => ({
           ...s,
@@ -79,19 +58,12 @@ export function InterviewProvider({ children }: { children: ReactNode }) {
           profile: null,
           gaps: [],
           evidence: [],
-          dialogues: [],
           interviewDone: false,
         })),
-      // 改人格 → 重置证据/对话/面试结束（旧人格面试作废）
+      // 改人格 → 重置证据/面试结束（旧人格面试作废）
       setPersona: (id) =>
-        setState((s) => ({
-          ...s,
-          personaId: id,
-          evidence: [],
-          dialogues: [],
-          interviewDone: false,
-        })),
-      // 改简历 → 重置证据/对话/面试结束
+        setState((s) => ({ ...s, personaId: id, evidence: [], interviewDone: false })),
+      // 改简历 → 重置证据/面试结束
       setResume: (text, profile, gaps) =>
         setState((s) => ({
           ...s,
@@ -99,28 +71,13 @@ export function InterviewProvider({ children }: { children: ReactNode }) {
           profile,
           gaps,
           evidence: [],
-          dialogues: [],
           interviewDone: false,
         })),
       addEvidence: (evidence) => setState((s) => ({ ...s, evidence: [...s.evidence, evidence] })),
-      resetEvidence: () => setState((s) => ({ ...s, evidence: [], dialogues: [] })),
+      resetEvidence: () => setState((s) => ({ ...s, evidence: [] })),
       setFastMode: (fastMode) => setState((s) => ({ ...s, fastMode })),
       setInterviewDone: (done) => setState((s) => ({ ...s, interviewDone: done })),
       setAvatar: (avatar) => setState((s) => ({ ...s, avatar })),
-      setAvatarEnabled: (enabled) => {
-        localStorage.setItem('avatarEnabled', enabled ? '1' : '0')
-        setState((s) => ({ ...s, avatarEnabled: enabled }))
-      },
-      setReadAloud: (readAloud) => {
-        localStorage.setItem('readAloud', readAloud ? '1' : '0')
-        setState((s) => ({ ...s, readAloud }))
-      },
-      setTtsVoice: (ttsVoice) => {
-        localStorage.setItem('ttsVoice', ttsVoice)
-        setState((s) => ({ ...s, ttsVoice }))
-      },
-      setVoiceMetrics: (voiceMetrics) => setState((s) => ({ ...s, voiceMetrics })),
-      setDialogues: (dialogues) => setState((s) => ({ ...s, dialogues })),
     }),
     [state],
   )

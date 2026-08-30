@@ -36,7 +36,6 @@ def start(req: StartRequest) -> dict:
         "session_id": sid,
         "opening": orch.opening(),
         "dimensions": orch.dimensions,
-        "rounds": orch.rounds,
     }
 
 
@@ -56,8 +55,6 @@ def answer(req: AnswerRequest) -> StreamingResponse:
         yield _sse({"type": "action", "action": result["action"]})
         if result["evidence"]:
             yield _sse({"type": "evidence", "evidence": result["evidence"]})
-        if result.get("round_result"):
-            yield _sse({"type": "round", "result": result["round_result"]})
         for chunk in result["followup_iter"]:
             yield _sse({"type": "delta", "content": chunk})
         yield _sse({"type": "done", "closed": result["closed"]})
